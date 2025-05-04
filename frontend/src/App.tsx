@@ -9,7 +9,6 @@ function App() {
   const [lastUpdated, setLastUpdated] = useState<string>("");
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [search, setSearch] = useState<string>("");
-
   const [isDark, setIsDark] = useState<boolean>(false);
 
   const {
@@ -21,6 +20,7 @@ function App() {
     getAccessTokenSilently,
   } = useAuth0();
 
+  // 🌙 Theme init
   useEffect(() => {
     const savedTheme = localStorage.getItem("theme");
     setIsDark(savedTheme === "dark");
@@ -31,6 +31,7 @@ function App() {
     localStorage.setItem("theme", isDark ? "dark" : "light");
   }, [isDark]);
 
+  // 📈 Fetch stocks
   const fetchStocks = async () => {
     try {
       setRefreshing(true);
@@ -47,19 +48,20 @@ function App() {
   };
 
   useEffect(() => {
-    fetchStocks();
-    const interval = setInterval(fetchStocks, 42000);
-    return () => clearInterval(interval);
-  }, []);
+    if (isAuthenticated) {
+      fetchStocks();
+      const interval = setInterval(fetchStocks, 42000);
+      return () => clearInterval(interval);
+    }
+  }, [isAuthenticated]);
 
   const filteredStocks = stocks.filter((stock) =>
     stock.full_name.toLowerCase().includes(search.toLowerCase()) ||
     stock.symbol.toLowerCase().includes(search.toLowerCase())
   );
 
+  // 🔐 Test protected route
   const testProtectedRoute = async () => {
-    console.log("clicked /users/me test button");
-
     try {
       const token = await getAccessTokenSilently();
       const res = await axios.get("http://localhost:8000/users/me", {
@@ -73,15 +75,40 @@ function App() {
     }
   };
 
+  // ⏳ Loading screen
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-900 text-white flex flex-col justify-center items-center gap-4">
+        <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+        <p className="text-lg font-semibold">Launching MarketMuse...</p>
+      </div>
+    );
+  }
+
+  // 👤 Not logged in: show only login button
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-gray-900 text-white flex flex-col justify-center items-center gap-4">
+        <h1 className="text-3xl font-bold">Welcome to MarketMuse</h1>
+        <p className="text-gray-400">Your AI-powered trading assistant</p>
+        <button
+          onClick={() => loginWithRedirect()}
+          className="px-6 py-3 rounded bg-green-600 hover:bg-green-700 transition text-white font-medium"
+        >
+          Login to Continue
+        </button>
+      </div>
+    );
+  }
+
+  // ✅ Logged in view
   return (
     <div className={`min-h-screen ${isDark ? "dark bg-gray-900" : "bg-gray-100"} p-6`}>
       <div className="text-gray-900 dark:text-gray-100">
         <h1 className="text-3xl font-bold text-center mb-4">MarketMuse</h1>
 
         <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6">
-          <p className="text-sm">
-            Last updated: {lastUpdated || "Loading..."}
-          </p>
+          <p className="text-sm">Last updated: {lastUpdated || "Loading..."}</p>
           <div className="flex gap-3 items-center flex-wrap">
             <input
               type="text"
@@ -107,33 +134,21 @@ function App() {
             >
               {isDark ? "Light Mode" : "Dark Mode"}
             </button>
-
-            {isAuthenticated ? (
-              <>
-                <p className="text-sm">Welcome, {user?.name}</p>
-                <button
-                  onClick={() =>
-                    logout({ logoutParams: { returnTo: window.location.origin } })
-                  }
-                  className="px-4 py-2 text-sm rounded bg-red-600 text-white hover:bg-red-700 transition"
-                >
-                  Logout
-                </button>
-                <button
-                  onClick={testProtectedRoute}
-                  className="px-4 py-2 text-sm rounded bg-purple-600 text-white hover:bg-purple-700 transition"
-                >
-                  Test /users/me
-                </button>
-              </>
-            ) : (
-              <button
-                onClick={() => loginWithRedirect()}
-                className="px-4 py-2 text-sm rounded bg-green-600 text-white hover:bg-green-700 transition"
-              >
-                Login
-              </button>
-            )}
+            <p className="text-sm">Welcome, {user?.name}</p>
+            <button
+              onClick={() =>
+                logout({ logoutParams: { returnTo: window.location.origin } })
+              }
+              className="px-4 py-2 text-sm rounded bg-red-600 text-white hover:bg-red-700 transition"
+            >
+              Logout
+            </button>
+            <button
+              onClick={testProtectedRoute}
+              className="px-4 py-2 text-sm rounded bg-purple-600 text-white hover:bg-purple-700 transition"
+            >
+              Test /users/me
+            </button>
           </div>
         </div>
 
