@@ -1,6 +1,12 @@
 from fastapi import FastAPI
 from app.routers import stocks,users
 from fastapi.middleware.cors import CORSMiddleware
+from app.database import Base, engine
+from app import base_models
+
+# Create tables
+Base.metadata.create_all(bind=engine)
+
 
 origins = [
     "http://localhost:5173", #frontend url
