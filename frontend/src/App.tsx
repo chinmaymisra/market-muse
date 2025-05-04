@@ -19,7 +19,6 @@ function App() {
     isLoading,
   } = useAuth0();
 
-  // 🌙 Theme init
   useEffect(() => {
     const savedTheme = localStorage.getItem("theme");
     setIsDark(savedTheme === "dark");
@@ -30,7 +29,6 @@ function App() {
     localStorage.setItem("theme", isDark ? "dark" : "light");
   }, [isDark]);
 
-  // 📈 Fetch stocks
   const fetchStocks = async () => {
     try {
       setRefreshing(true);
@@ -38,7 +36,6 @@ function App() {
       setStocks(res.data);
       const now = new Date();
       setLastUpdated(now.toLocaleTimeString());
-      console.log("Data refreshed at:", now.toLocaleTimeString());
     } catch (error) {
       console.error("Failed to fetch stock data:", error);
     } finally {
@@ -59,20 +56,18 @@ function App() {
     stock.symbol.toLowerCase().includes(search.toLowerCase())
   );
 
-  // ⏳ Loading screen
   if (isLoading) {
     return (
-      <div className="w-full h-screen bg-gray-900 text-white flex flex-col justify-center items-center gap-4">
+      <div className="w-full h-screen bg-gray-900 text-white flex items-center justify-center flex-col gap-4">
         <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
         <p className="text-lg font-semibold">Launching MarketMuse...</p>
       </div>
     );
   }
 
-  // 👤 Not logged in: show only login button
   if (!isAuthenticated) {
     return (
-      <div className="w-full h-screen bg-gray-900 text-white flex flex-col justify-center items-center gap-4 px-4">
+      <div className="w-full h-screen bg-gray-900 text-white flex items-center justify-center flex-col gap-4 px-4">
         <h1 className="text-3xl font-bold text-center">Welcome to MarketMuse</h1>
         <p className="text-gray-400 text-center">Your AI-powered trading assistant</p>
         <button
@@ -85,10 +80,9 @@ function App() {
     );
   }
 
-  // ✅ Logged in view
   return (
-    <div className={`w-full h-screen flex flex-col ${isDark ? "dark bg-gray-900" : "bg-gray-100"} p-6 overflow-y-auto`}>
-      <div className="text-gray-900 dark:text-gray-100 w-full">
+    <div className={`w-full min-h-screen ${isDark ? "dark bg-gray-900" : "bg-gray-100"} flex flex-col`}>
+      <div className="flex-grow text-gray-900 dark:text-gray-100 px-4 sm:px-6 py-6 w-full">
         <h1 className="text-3xl font-bold text-center mb-4">MarketMuse</h1>
 
         <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6">
@@ -120,9 +114,7 @@ function App() {
             </button>
             <p className="text-sm">Welcome, {user?.name}</p>
             <button
-              onClick={() =>
-                logout({ logoutParams: { returnTo: window.location.origin } })
-              }
+              onClick={() => logout({ logoutParams: { returnTo: window.location.origin } })}
               className="px-4 py-2 text-sm rounded bg-red-600 text-white hover:bg-red-700 transition"
             >
               Logout
