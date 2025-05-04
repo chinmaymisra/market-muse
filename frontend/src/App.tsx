@@ -19,7 +19,7 @@ function App() {
     isLoading,
   } = useAuth0();
 
-  // Dark Theme init
+  // Theme init
   useEffect(() => {
     const savedTheme = localStorage.getItem("theme");
     setIsDark(savedTheme === "dark");
@@ -30,11 +30,11 @@ function App() {
     localStorage.setItem("theme", isDark ? "dark" : "light");
   }, [isDark]);
 
-  //  Fetch stocks
+  // Fetch stocks
   const fetchStocks = async () => {
     try {
       setRefreshing(true);
-      const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/stocks`);
+      const res = await axios.get("https://api.marketmuse.chinmaymisra.com/stocks");
       setStocks(res.data);
       const now = new Date();
       setLastUpdated(now.toLocaleTimeString());
@@ -59,22 +59,7 @@ function App() {
     stock.symbol.toLowerCase().includes(search.toLowerCase())
   );
 
-  //  Test protected route
-  /* const testProtectedRoute = async () => {
-    try {
-      const token = await getAccessTokenSilently();
-      const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/users/me`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      console.log("Protected response:", res.data);
-    } catch (err) {
-      console.error("Failed to access protected route:", err);
-    }
-  }; */
-
-  //  Loading screen
+  // Loading screen
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-900 text-white flex flex-col justify-center items-center gap-4">
@@ -84,23 +69,24 @@ function App() {
     );
   }
 
-  //  Not logged in: show only login button
+  // Not logged in: clean login screen
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-gray-900 text-white flex flex-col justify-center items-center gap-4">
-        <h1 className="text-3xl font-bold">Welcome to MarketMuse</h1>
-        <p className="text-gray-400">Your AI-powered trading assistant</p>
-        <button
-          onClick={() => loginWithRedirect()}
-          className="px-6 py-3 rounded bg-green-600 hover:bg-green-700 transition text-white font-medium"
-        >
-          Login to Continue
-        </button>
+      <div className="min-h-screen flex items-center justify-center bg-gray-900 text-white">
+        <div className="text-center px-6">
+          <h1 className="text-3xl md:text-5xl font-bold mb-4">Welcome to MarketMuse</h1>
+          <p className="text-gray-400 mb-6 text-lg">Your AI-powered trading assistant</p>
+          <button
+            onClick={() => loginWithRedirect()}
+            className="px-6 py-3 rounded bg-green-600 hover:bg-green-700 transition text-white font-medium"
+          >
+            Login to Continue
+          </button>
+        </div>
       </div>
     );
   }
 
-  //  Logged in view
   return (
     <div className={`min-h-screen ${isDark ? "dark bg-gray-900" : "bg-gray-100"} p-6`}>
       <div className="text-gray-900 dark:text-gray-100">
@@ -135,9 +121,7 @@ function App() {
             </button>
             <p className="text-sm">Welcome, {user?.name}</p>
             <button
-              onClick={() =>
-                logout({ logoutParams: { returnTo: window.location.origin } })
-              }
+              onClick={() => logout({ logoutParams: { returnTo: window.location.origin } })}
               className="px-4 py-2 text-sm rounded bg-red-600 text-white hover:bg-red-700 transition"
             >
               Logout
