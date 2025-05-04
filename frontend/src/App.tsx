@@ -35,7 +35,7 @@ function App() {
   const fetchStocks = async () => {
     try {
       setRefreshing(true);
-      const res = await axios.get("http://localhost:8000/stocks");
+      const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/stocks`);
       setStocks(res.data);
       const now = new Date();
       setLastUpdated(now.toLocaleTimeString());
@@ -64,7 +64,7 @@ function App() {
   const testProtectedRoute = async () => {
     try {
       const token = await getAccessTokenSilently();
-      const res = await axios.get("http://localhost:8000/users/me", {
+      const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/users/me`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
