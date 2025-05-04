@@ -26,7 +26,7 @@ export default function StockCard({ stock }: Props) {
         </div>
         <div className="text-right">
           <p className="text-lg font-bold text-gray-900 dark:text-white">
-            ₹{stock.price.toFixed(2)}
+            ${stock.price.toFixed(2)}
           </p>
           <p
             className={`text-sm ${
