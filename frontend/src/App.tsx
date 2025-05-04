@@ -20,7 +20,7 @@ function App() {
     getAccessTokenSilently,
   } = useAuth0();
 
-  // 🌙 Theme init
+  // Dark Theme init
   useEffect(() => {
     const savedTheme = localStorage.getItem("theme");
     setIsDark(savedTheme === "dark");
@@ -31,7 +31,7 @@ function App() {
     localStorage.setItem("theme", isDark ? "dark" : "light");
   }, [isDark]);
 
-  // 📈 Fetch stocks
+  //  Fetch stocks
   const fetchStocks = async () => {
     try {
       setRefreshing(true);
@@ -60,7 +60,7 @@ function App() {
     stock.symbol.toLowerCase().includes(search.toLowerCase())
   );
 
-  // 🔐 Test protected route
+  //  Test protected route
   const testProtectedRoute = async () => {
     try {
       const token = await getAccessTokenSilently();
@@ -75,7 +75,7 @@ function App() {
     }
   };
 
-  // ⏳ Loading screen
+  //  Loading screen
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-900 text-white flex flex-col justify-center items-center gap-4">
@@ -85,7 +85,7 @@ function App() {
     );
   }
 
-  // 👤 Not logged in: show only login button
+  //  Not logged in: show only login button
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-gray-900 text-white flex flex-col justify-center items-center gap-4">
@@ -101,7 +101,7 @@ function App() {
     );
   }
 
-  // ✅ Logged in view
+  //  Logged in view
   return (
     <div className={`min-h-screen ${isDark ? "dark bg-gray-900" : "bg-gray-100"} p-6`}>
       <div className="text-gray-900 dark:text-gray-100">
@@ -142,12 +142,6 @@ function App() {
               className="px-4 py-2 text-sm rounded bg-red-600 text-white hover:bg-red-700 transition"
             >
               Logout
-            </button>
-            <button
-              onClick={testProtectedRoute}
-              className="px-4 py-2 text-sm rounded bg-purple-600 text-white hover:bg-purple-700 transition"
-            >
-              Test /users/me
             </button>
           </div>
         </div>
