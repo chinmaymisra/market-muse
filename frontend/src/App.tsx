@@ -61,7 +61,7 @@ function App() {
   );
 
   //  Test protected route
-  const testProtectedRoute = async () => {
+  /* const testProtectedRoute = async () => {
     try {
       const token = await getAccessTokenSilently();
       const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/users/me`, {
@@ -73,7 +73,7 @@ function App() {
     } catch (err) {
       console.error("Failed to access protected route:", err);
     }
-  };
+  }; */
 
   //  Loading screen
   if (isLoading) {
