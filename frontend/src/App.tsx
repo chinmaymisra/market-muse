@@ -1,0 +1,156 @@
+import { useEffect, useState } from "react";
+import axios from "axios";
+import { Stock } from "./types";
+import StockCard from "./components/StockCard";
+import { useAuth0 } from "@auth0/auth0-react";
+
+function App() {
+  const [stocks, setStocks] = useState<Stock[]>([]);
+  const [lastUpdated, setLastUpdated] = useState<string>("");
+  const [refreshing, setRefreshing] = useState<boolean>(false);
+  const [search, setSearch] = useState<string>("");
+
+  const [isDark, setIsDark] = useState<boolean>(false);
+
+  const {
+    loginWithRedirect,
+    logout,
+    isAuthenticated,
+    user,
+    isLoading,
+    getAccessTokenSilently,
+  } = useAuth0();
+
+  useEffect(() => {
+    const savedTheme = localStorage.getItem("theme");
+    setIsDark(savedTheme === "dark");
+  }, []);
+
+  useEffect(() => {
+    document.documentElement.classList.toggle("dark", isDark);
+    localStorage.setItem("theme", isDark ? "dark" : "light");
+  }, [isDark]);
+
+  const fetchStocks = async () => {
+    try {
+      setRefreshing(true);
+      const res = await axios.get("http://localhost:8000/stocks");
+      setStocks(res.data);
+      const now = new Date();
+      setLastUpdated(now.toLocaleTimeString());
+      console.log("Data refreshed at:", now.toLocaleTimeString());
+    } catch (error) {
+      console.error("Failed to fetch stock data:", error);
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchStocks();
+    const interval = setInterval(fetchStocks, 42000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const filteredStocks = stocks.filter((stock) =>
+    stock.full_name.toLowerCase().includes(search.toLowerCase()) ||
+    stock.symbol.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const testProtectedRoute = async () => {
+    console.log("clicked /users/me test button");
+
+    try {
+      const token = await getAccessTokenSilently();
+      const res = await axios.get("http://localhost:8000/users/me", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      console.log("Protected response:", res.data);
+    } catch (err) {
+      console.error("Failed to access protected route:", err);
+    }
+  };
+
+  return (
+    <div className={`min-h-screen ${isDark ? "dark bg-gray-900" : "bg-gray-100"} p-6`}>
+      <div className="text-gray-900 dark:text-gray-100">
+        <h1 className="text-3xl font-bold text-center mb-4">MarketMuse</h1>
+
+        <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6">
+          <p className="text-sm">
+            Last updated: {lastUpdated || "Loading..."}
+          </p>
+          <div className="flex gap-3 items-center flex-wrap">
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search by name or symbol"
+              className="px-3 py-2 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm rounded-md text-black dark:text-white w-64"
+            />
+            <button
+              onClick={fetchStocks}
+              className={`px-4 py-2 text-sm rounded ${
+                refreshing
+                  ? "bg-gray-400 cursor-not-allowed"
+                  : "bg-blue-600 hover:bg-blue-700"
+              } text-white transition`}
+              disabled={refreshing}
+            >
+              {refreshing ? "Refreshing..." : "Refresh Now"}
+            </button>
+            <button
+              onClick={() => setIsDark(!isDark)}
+              className="px-4 py-2 text-sm rounded bg-gray-800 text-white hover:bg-gray-700 transition"
+            >
+              {isDark ? "Light Mode" : "Dark Mode"}
+            </button>
+
+            {isAuthenticated ? (
+              <>
+                <p className="text-sm">Welcome, {user?.name}</p>
+                <button
+                  onClick={() =>
+                    logout({ logoutParams: { returnTo: window.location.origin } })
+                  }
+                  className="px-4 py-2 text-sm rounded bg-red-600 text-white hover:bg-red-700 transition"
+                >
+                  Logout
+                </button>
+                <button
+                  onClick={testProtectedRoute}
+                  className="px-4 py-2 text-sm rounded bg-purple-600 text-white hover:bg-purple-700 transition"
+                >
+                  Test /users/me
+                </button>
+              </>
+            ) : (
+              <button
+                onClick={() => loginWithRedirect()}
+                className="px-4 py-2 text-sm rounded bg-green-600 text-white hover:bg-green-700 transition"
+              >
+                Login
+              </button>
+            )}
+          </div>
+        </div>
+
+        {filteredStocks.length === 0 ? (
+          <p className="text-center text-gray-500 dark:text-gray-400 mt-10">
+            No stocks found.
+          </p>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+            {filteredStocks.map((stock) => (
+              <StockCard key={stock.symbol} stock={stock} />
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+export default App;
