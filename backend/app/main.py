@@ -9,7 +9,8 @@ Base.metadata.create_all(bind=engine)
 
 
 origins = [
-    "http://localhost:5173", #frontend url
+    "http://localhost:5173", #dev frontend
+    "https://marketmuse.chinmaymisra.com", #prod frontend
  ]
 
 app = FastAPI(title = 'MarketMuse - Stock Prediction API')
