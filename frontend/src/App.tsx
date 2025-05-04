@@ -17,7 +17,6 @@ function App() {
     isAuthenticated,
     user,
     isLoading,
-    getAccessTokenSilently,
   } = useAuth0();
 
   // Dark Theme init
