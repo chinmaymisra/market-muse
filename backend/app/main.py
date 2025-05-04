@@ -1,19 +1,22 @@
 from fastapi import FastAPI
-from app.routers import stocks,users
+from app.routers import stocks, users
 from fastapi.middleware.cors import CORSMiddleware
-from app.database import Base, engine
-from app import base_models
+from app import database
+from contextlib import asynccontextmanager
 
-# Create tables
-Base.metadata.create_all(bind=engine)
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Runs on startup
+    database.Base.metadata.create_all(bind=database.engine)
+    yield
+    # Optional: cleanup on shutdown
 
+app = FastAPI(title="MarketMuse - Stock Prediction API", lifespan=lifespan)
 
 origins = [
-    "http://localhost:5173", #dev frontend
-    "https://marketmuse.chinmaymisra.com", #prod frontend
- ]
-
-app = FastAPI(title = 'MarketMuse - Stock Prediction API')
+    "http://localhost:5173",  # dev frontend
+    "https://marketmuse.chinmaymisra.com",  # prod frontend
+]
 
 app.add_middleware(
     CORSMiddleware,
@@ -22,7 +25,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
 
 app.include_router(stocks.router)
 app.include_router(users.router)
@@ -34,10 +36,6 @@ async def log_all_requests(request, call_next):
     print(f"⬅️ {response.status_code}")
     return response
 
-
-
 @app.get("/")
 def root():
-    return {"message" : "Welcome to MarketMuse API"}
-
-
+    return {"message": "Welcome to MarketMuse API"}
