@@ -58,31 +58,35 @@ function App() {
 
   if (isLoading) {
     return (
-      <div className="w-full h-screen bg-gray-900 text-white flex items-center justify-center flex-col gap-4">
-        <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-        <p className="text-lg font-semibold">Launching MarketMuse...</p>
+      <div className="min-h-screen w-full flex items-center justify-center bg-gray-900 text-white">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-lg font-semibold">Launching MarketMuse...</p>
+        </div>
       </div>
     );
   }
 
   if (!isAuthenticated) {
     return (
-      <div className="w-full h-screen bg-gray-900 text-white flex items-center justify-center flex-col gap-4 px-4">
-        <h1 className="text-3xl font-bold text-center">Welcome to MarketMuse</h1>
-        <p className="text-gray-400 text-center">Your AI-powered trading assistant</p>
-        <button
-          onClick={() => loginWithRedirect()}
-          className="px-6 py-3 rounded bg-green-600 hover:bg-green-700 transition text-white font-medium"
-        >
-          Login to Continue
-        </button>
+      <div className="min-h-screen w-full flex items-center justify-center bg-gray-900 text-white px-4">
+        <div className="flex flex-col items-center gap-4 max-w-md w-full">
+          <h1 className="text-3xl font-bold text-center">Welcome to MarketMuse</h1>
+          <p className="text-gray-400 text-center">Your AI-powered trading assistant</p>
+          <button
+            onClick={() => loginWithRedirect()}
+            className="px-6 py-3 rounded bg-green-600 hover:bg-green-700 transition text-white font-medium"
+          >
+            Login to Continue
+          </button>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className={`w-full min-h-screen ${isDark ? "dark bg-gray-900" : "bg-gray-100"} flex flex-col`}>
-      <div className="flex-grow text-gray-900 dark:text-gray-100 px-4 sm:px-6 py-6 w-full">
+    <div className={`min-h-screen w-full ${isDark ? "dark bg-gray-900" : "bg-gray-100"} p-6`}> 
+      <div className="text-gray-900 dark:text-gray-100 max-w-screen-xl mx-auto">
         <h1 className="text-3xl font-bold text-center mb-4">MarketMuse</h1>
 
         <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6">
