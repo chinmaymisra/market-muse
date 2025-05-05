@@ -6,7 +6,12 @@
         if (location.protocol !== 'https:') {
           location.href = 'https:' + window.location.href.substring(window.location.protocol.length);
         }
-    </script>      
+    </script>
+    <script>
+        if (location.hostname.startsWith("www.")) {
+          location.href = location.protocol + "//" + location.hostname.replace("www.", "") + location.pathname;
+        }
+      </script>            
     <link rel="canonical" href="https://marketmuse.chinmaymisra.com/" />
     <link rel="icon" href="/marketmuse_final_icon.ico" type="image/x-icon" />
     <link rel="icon" href="/marketmuse_highres.png" type="image/png" sizes="512x512" />
