@@ -33,16 +33,20 @@ function App() {
   const fetchStocks = async () => {
     try {
       setRefreshing(true);
-      const res = await axios.get("https://api.marketmuse.chinmaymisra.com/stocks");
+      const res = await axios.get("https://api.marketmuse.chinmaymisra.com/stocks", {
+        timeout: 10000, // 10 sec max
+      });
       setStocks(res.data);
       const now = new Date();
       setLastUpdated(now.toLocaleTimeString());
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to fetch stock data:", error);
+      setStocks([]); // ensure UI can react
     } finally {
       setRefreshing(false);
     }
   };
+  
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -127,17 +131,24 @@ function App() {
           </div>
         </div>
 
-        {filteredStocks.length === 0 ? (
-          <p className="text-center text-gray-500 dark:text-gray-400 mt-10">
-            No stocks found.
-          </p>
+                {filteredStocks.length === 0 ? (
+        refreshing ? (
+            <p className="text-center text-gray-500 dark:text-gray-400 mt-10">
+            Waking up server, please wait...
+            </p>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+            <p className="text-center text-gray-500 dark:text-gray-400 mt-10">
+            No stocks found.
+            </p>
+        )
+        ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
             {filteredStocks.map((stock) => (
-              <StockCard key={stock.symbol} stock={stock} />
+            <StockCard key={stock.symbol} stock={stock} />
             ))}
-          </div>
+        </div>
         )}
+
       </div>
     </div>
   );
