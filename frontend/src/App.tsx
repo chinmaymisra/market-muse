@@ -3,6 +3,7 @@ import axios from "axios";
 import { Stock } from "./types";
 import StockCard from "./components/StockCard";
 import { useAuth0 } from "@auth0/auth0-react";
+import "./index.css"; // Ensure global styles apply to root
 
 function App() {
   const [stocks, setStocks] = useState<Stock[]>([]);
@@ -58,7 +59,7 @@ function App() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen w-full flex items-center justify-center bg-gray-900 text-white">
+      <div className="h-screen w-screen flex items-center justify-center bg-gray-900 text-white">
         <div className="flex flex-col items-center gap-4">
           <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
           <p className="text-lg font-semibold">Launching MarketMuse...</p>
@@ -69,10 +70,10 @@ function App() {
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen w-full flex items-center justify-center bg-gray-900 text-white px-4">
-        <div className="flex flex-col items-center gap-4 max-w-md w-full">
-          <h1 className="text-3xl font-bold text-center">Welcome to MarketMuse</h1>
-          <p className="text-gray-400 text-center">Your AI-powered trading assistant</p>
+      <div className="h-screen w-screen flex items-center justify-center bg-gray-900 text-white px-4">
+        <div className="flex flex-col items-center gap-4 text-center">
+          <h1 className="text-3xl font-bold">Welcome to MarketMuse</h1>
+          <p className="text-gray-400">Your AI-powered trading assistant</p>
           <button
             onClick={() => loginWithRedirect()}
             className="px-6 py-3 rounded bg-green-600 hover:bg-green-700 transition text-white font-medium"
@@ -85,7 +86,7 @@ function App() {
   }
 
   return (
-    <div className={`min-h-screen w-full ${isDark ? "dark bg-gray-900" : "bg-gray-100"} p-6`}> 
+    <div className={`min-h-screen w-screen overflow-x-hidden ${isDark ? "dark bg-gray-900" : "bg-gray-100"} p-6`}>
       <div className="text-gray-900 dark:text-gray-100 max-w-screen-xl mx-auto">
         <h1 className="text-3xl font-bold text-center mb-4">MarketMuse</h1>
 
