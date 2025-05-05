@@ -3,6 +3,7 @@ from app.routers import stocks, users
 from fastapi.middleware.cors import CORSMiddleware
 from app import database
 from contextlib import asynccontextmanager
+from fastapi.responses import JSONResponse
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -36,6 +37,6 @@ async def log_all_requests(request, call_next):
     print(f"⬅️ {response.status_code}")
     return response
 
-@app.get("/")
+@app.api_route("/", methods = ["GET","HEAD"])
 def root():
-    return {"message": "Welcome to MarketMuse API"}
+    return JSONResponse(content = {"message": "Welcome to MarketMuse API"})
