@@ -1,7 +1,10 @@
+import { useNavigate } from "react-router-dom";
 import { auth, provider } from "../firebase";
 import { signInWithPopup } from "firebase/auth";
 
 export const LoginButton = () => {
+  const navigate = useNavigate();
+
   const handleLogin = async () => {
     try {
       const result = await signInWithPopup(auth, provider);
@@ -18,6 +21,9 @@ export const LoginButton = () => {
 
       const data = await res.json();
       console.log("✅ /users/me response:", data);
+
+      // ✅ Redirect to dashboard
+      navigate("/");
     } catch (err) {
       console.error("❌ Login failed or backend error:", err);
     }
