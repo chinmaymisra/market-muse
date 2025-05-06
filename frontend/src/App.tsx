@@ -11,6 +11,15 @@ import { signOut } from "firebase/auth";
 import { auth } from "./firebase";
 
 function MainApp() {
+
+  const navigate = useNavigate();
+
+  useEffect(() => {
+  if (!loading && !user) {
+      navigate("/login");
+   }
+  }, [user, loading, navigate]);
+
   const [stocks, setStocks] = useState<Stock[]>([]);
   const [lastUpdated, setLastUpdated] = useState<string>("");
   const [refreshing, setRefreshing] = useState<boolean>(false);

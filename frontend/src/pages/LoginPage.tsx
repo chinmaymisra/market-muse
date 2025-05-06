@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { LoginButton } from "../components/LoginButton";
 import { useAuth } from "../context/AuthContext";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Navigate } from "react-router-dom";
 
 const LoginPage = () => {
   const { user, loading } = useAuth();
@@ -9,10 +9,13 @@ const LoginPage = () => {
 
   useEffect(() => {
     if (!loading && user) {
-      // Delay ensures state has propagated
-      setTimeout(() => navigate("/"), 50);
+      navigate("/");
     }
   }, [user, loading, navigate]);
+
+  if (!loading && user) {
+    return <Navigate to="/" replace />;
+  }
 
   return (
     <div className="flex justify-center items-center min-h-screen bg-gray-900 text-white">
