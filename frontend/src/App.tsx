@@ -10,7 +10,6 @@ import { auth } from "./firebase";
 import LoginPage from "./pages/LoginPage";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 
-// MAIN LOGGED-IN APPLICATION
 function MainApp() {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
@@ -66,6 +65,11 @@ function MainApp() {
     }
   }, [isAuthenticated]);
 
+  const filteredStocks: Stock[] = stocks.filter((stock: Stock) =>
+    stock.full_name.toLowerCase().includes(search.toLowerCase()) ||
+    stock.symbol.toLowerCase().includes(search.toLowerCase())
+  );
+
   if (loading) {
     return (
       <div className="h-screen w-screen flex items-center justify-center bg-gray-900 text-white">
@@ -78,7 +82,7 @@ function MainApp() {
   }
 
   if (!isAuthenticated) {
-    return null; // avoid flicker, navigation handled above
+    return null;
   }
 
   return (
@@ -139,7 +143,6 @@ function MainApp() {
   );
 }
 
-// ROOT ROUTER
 function App() {
   return (
     <AuthProvider>
