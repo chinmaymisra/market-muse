@@ -5,7 +5,7 @@ import StockCard from "./components/StockCard";
 import "./index.css";
 
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import LoginPage from "./pages/LoginPage";
+import { LoginPage } from "./pages/LoginPage";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { signOut } from "firebase/auth";
 import { auth } from "./firebase";
