@@ -16,6 +16,7 @@ def get_db():
 @router.get("/me")
 def read_me(user=Depends(get_current_user), db: Session = Depends(get_db)):
     existing_user = db.query(DBUser).filter(DBUser.uid == user["uid"]).first()
+
     if not existing_user:
         new_user = DBUser(
             uid=user["uid"],
@@ -25,10 +26,18 @@ def read_me(user=Depends(get_current_user), db: Session = Depends(get_db)):
         )
         db.add(new_user)
         db.commit()
+        db.refresh(new_user)
+
+        return {
+            "uid": new_user.uid,
+            "email": new_user.email,
+            "name": new_user.name,
+            "picture": new_user.picture,
+        }
 
     return {
-        "uid": user["uid"],
-        "email": user["email"],
-        "name": user["name"],
-        "picture": user.get("picture"),
+        "uid": existing_user.uid,
+        "email": existing_user.email,
+        "name": existing_user.name,
+        "picture": existing_user.picture,
     }

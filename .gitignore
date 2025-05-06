@@ -130,11 +130,16 @@ celerybeat.pid
 # Environments
 .env
 .venv
+.market-muse-venv
 env/
 venv/
+market-muse-venv/
 ENV/
 env.bak/
 venv.bak/
+market-muse-venv.bak/
+
+
 
 # Spyder project settings
 .spyderproject
@@ -172,3 +177,7 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+
+#Firebase Service Account
+firebase-service-account.json
