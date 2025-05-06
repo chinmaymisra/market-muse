@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import { LoginButton } from "../components/LoginButton";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
