@@ -16,7 +16,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
         redirect_uri: window.location.origin,
         audience: audience,
       }}
-    >
+      
       <App />
   </React.StrictMode>
 );
