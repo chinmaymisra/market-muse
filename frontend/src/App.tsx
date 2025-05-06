@@ -1,24 +1,20 @@
 import { useEffect, useState } from "react";
+import { BrowserRouter as Router, Routes, Route, useNavigate } from "react-router-dom";
 import axios from "axios";
+import { signOut } from "firebase/auth";
+
 import { Stock } from "./types";
 import StockCard from "./components/StockCard";
 import "./index.css";
-
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { auth } from "./firebase";
 import LoginPage from "./pages/LoginPage";
 import { AuthProvider, useAuth } from "./context/AuthContext";
-import { signOut } from "firebase/auth";
-import { auth } from "./firebase";
 
+// MAIN LOGGED-IN APPLICATION
 function MainApp() {
-
+  const { user, loading } = useAuth();
   const navigate = useNavigate();
-
-  useEffect(() => {
-  if (!loading && !user) {
-      navigate("/login");
-   }
-  }, [user, loading, navigate]);
+  const isAuthenticated = !!user;
 
   const [stocks, setStocks] = useState<Stock[]>([]);
   const [lastUpdated, setLastUpdated] = useState<string>("");
@@ -26,8 +22,11 @@ function MainApp() {
   const [search, setSearch] = useState<string>("");
   const [isDark, setIsDark] = useState<boolean>(false);
 
-  const { user, loading } = useAuth();
-  const isAuthenticated = !!user;
+  useEffect(() => {
+    if (!loading && !user) {
+      navigate("/login");
+    }
+  }, [user, loading, navigate]);
 
   useEffect(() => {
     const savedTheme = localStorage.getItem("theme");
@@ -42,20 +41,17 @@ function MainApp() {
   const fetchStocks = async () => {
     try {
       setRefreshing(true);
-
       const token = await user?.getIdToken();
+
       const res = await axios.get("https://api.marketmuse.chinmaymisra.com/stocks", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
         timeout: 10000,
       });
 
       setStocks(res.data);
-      const now = new Date();
-      setLastUpdated(now.toLocaleTimeString());
-    } catch (error: any) {
-      console.error("Failed to fetch stock data:", error);
+      setLastUpdated(new Date().toLocaleTimeString());
+    } catch (err) {
+      console.error("Failed to fetch stock data:", err);
       setStocks([]);
     } finally {
       setRefreshing(false);
@@ -70,16 +66,11 @@ function MainApp() {
     }
   }, [isAuthenticated]);
 
-  const filteredStocks = stocks.filter((stock) =>
-    stock.full_name.toLowerCase().includes(search.toLowerCase()) ||
-    stock.symbol.toLowerCase().includes(search.toLowerCase())
-  );
-
   if (loading) {
     return (
       <div className="h-screen w-screen flex items-center justify-center bg-gray-900 text-white">
         <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+          <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
           <p className="text-lg font-semibold">Launching MarketMuse...</p>
         </div>
       </div>
@@ -87,7 +78,7 @@ function MainApp() {
   }
 
   if (!isAuthenticated) {
-    return <p className="text-white text-center mt-20">Please log in to view content.</p>;
+    return null; // avoid flicker, navigation handled above
   }
 
   return (
@@ -107,10 +98,10 @@ function MainApp() {
             />
             <button
               onClick={fetchStocks}
+              disabled={refreshing}
               className={`px-4 py-2 text-sm rounded ${
                 refreshing ? "bg-gray-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"
               } text-white transition`}
-              disabled={refreshing}
             >
               {refreshing ? "Refreshing..." : "Refresh Now"}
             </button>
@@ -132,13 +123,9 @@ function MainApp() {
 
         {filteredStocks.length === 0 ? (
           refreshing ? (
-            <p className="text-center text-gray-500 dark:text-gray-400 mt-10">
-              Waking up server, please wait...
-            </p>
+            <p className="text-center text-gray-500 dark:text-gray-400 mt-10">Waking up server, please wait...</p>
           ) : (
-            <p className="text-center text-gray-500 dark:text-gray-400 mt-10">
-              No stocks found.
-            </p>
+            <p className="text-center text-gray-500 dark:text-gray-400 mt-10">No stocks found.</p>
           )
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
@@ -152,6 +139,7 @@ function MainApp() {
   );
 }
 
+// ROOT ROUTER
 function App() {
   return (
     <AuthProvider>
