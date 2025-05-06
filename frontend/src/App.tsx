@@ -4,7 +4,7 @@ import { Stock } from "./types";
 import StockCard from "./components/StockCard";
 import "./index.css";
 
-import { BrowserRouter as Router, Routes, Route, useNavigate } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import LoginPage from "./pages/LoginPage";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { signOut } from "firebase/auth";
@@ -19,7 +19,6 @@ function MainApp() {
 
   const { user, loading } = useAuth();
   const isAuthenticated = !!user;
-  const navigate = useNavigate();
 
   useEffect(() => {
     const savedTheme = localStorage.getItem("theme");
@@ -34,6 +33,7 @@ function MainApp() {
   const fetchStocks = async () => {
     try {
       setRefreshing(true);
+
       const token = await user?.getIdToken();
       const res = await axios.get("https://api.marketmuse.chinmaymisra.com/stocks", {
         headers: {
@@ -41,6 +41,7 @@ function MainApp() {
         },
         timeout: 10000,
       });
+
       setStocks(res.data);
       const now = new Date();
       setLastUpdated(now.toLocaleTimeString());
@@ -60,18 +61,25 @@ function MainApp() {
     }
   }, [isAuthenticated]);
 
-  useEffect(() => {
-    if (!loading && !isAuthenticated) {
-      navigate("/login");
-    }
-  }, [loading, isAuthenticated, navigate]);
-
   const filteredStocks = stocks.filter((stock) =>
     stock.full_name.toLowerCase().includes(search.toLowerCase()) ||
     stock.symbol.toLowerCase().includes(search.toLowerCase())
   );
 
-  if (loading || !isAuthenticated) return null;
+  if (loading) {
+    return (
+      <div className="h-screen w-screen flex items-center justify-center bg-gray-900 text-white">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-lg font-semibold">Launching MarketMuse...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <p className="text-white text-center mt-20">Please log in to view content.</p>;
+  }
 
   return (
     <div className={`min-h-screen w-screen overflow-x-hidden ${isDark ? "dark bg-gray-900" : "bg-gray-100"} p-6`}>
@@ -103,9 +111,7 @@ function MainApp() {
             >
               {isDark ? "Light Mode" : "Dark Mode"}
             </button>
-            <p className="text-sm">
-              Welcome, {typeof user?.displayName === "string" ? user.displayName : "User"}
-            </p>
+            <p className="text-sm">Welcome, {user?.displayName}</p>
             <button
               onClick={() => signOut(auth)}
               className="px-4 py-2 text-sm rounded bg-red-600 text-white hover:bg-red-700 transition"
