@@ -111,7 +111,10 @@ function MainApp() {
             >
               {isDark ? "Light Mode" : "Dark Mode"}
             </button>
-            <p className="text-sm">Welcome, {user?.displayName}</p>
+            <p className="text-sm">
+            Welcome, {typeof user?.displayName === "string" ? user.displayName : "User"}
+            </p>
+
             <button
               onClick={() => signOut(auth)}
               className="px-4 py-2 text-sm rounded bg-red-600 text-white hover:bg-red-700 transition"
