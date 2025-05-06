@@ -1,4 +1,3 @@
-import React from "react";
 import { LoginButton } from "../components/LoginButton"; // ✅ make sure path is correct
 
 const LoginPage = () => {
