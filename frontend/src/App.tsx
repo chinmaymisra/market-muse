@@ -2,23 +2,23 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { Stock } from "./types";
 import StockCard from "./components/StockCard";
-import { useAuth0 } from "@auth0/auth0-react";
-import "./index.css"; // Ensure global styles apply to root
+import "./index.css";
 
-function App() {
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import LoginPage from "./pages/LoginPage";
+import { AuthProvider, useAuth } from "./context/AuthContext";
+import { signOut } from "firebase/auth";
+import { auth } from "./firebase";
+
+function MainApp() {
   const [stocks, setStocks] = useState<Stock[]>([]);
   const [lastUpdated, setLastUpdated] = useState<string>("");
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [search, setSearch] = useState<string>("");
   const [isDark, setIsDark] = useState<boolean>(false);
 
-  const {
-    loginWithRedirect,
-    logout,
-    isAuthenticated,
-    user,
-    isLoading,
-  } = useAuth0();
+  const { user, loading } = useAuth();
+  const isAuthenticated = !!user;
 
   useEffect(() => {
     const savedTheme = localStorage.getItem("theme");
@@ -33,20 +33,25 @@ function App() {
   const fetchStocks = async () => {
     try {
       setRefreshing(true);
+
+      const token = await user?.getIdToken();
       const res = await axios.get("https://api.marketmuse.chinmaymisra.com/stocks", {
-        timeout: 10000, // 10 sec max
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        timeout: 10000,
       });
+
       setStocks(res.data);
       const now = new Date();
       setLastUpdated(now.toLocaleTimeString());
     } catch (error: any) {
       console.error("Failed to fetch stock data:", error);
-      setStocks([]); // ensure UI can react
+      setStocks([]);
     } finally {
       setRefreshing(false);
     }
   };
-  
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -61,7 +66,7 @@ function App() {
     stock.symbol.toLowerCase().includes(search.toLowerCase())
   );
 
-  if (isLoading) {
+  if (loading) {
     return (
       <div className="h-screen w-screen flex items-center justify-center bg-gray-900 text-white">
         <div className="flex flex-col items-center gap-4">
@@ -73,20 +78,7 @@ function App() {
   }
 
   if (!isAuthenticated) {
-    return (
-      <div className="h-screen w-screen flex items-center justify-center bg-gray-900 text-white px-4">
-        <div className="flex flex-col items-center gap-4 text-center">
-          <h1 className="text-3xl font-bold">Welcome to MarketMuse</h1>
-          <p className="text-gray-400">Your AI-powered trading assistant</p>
-          <button
-            onClick={() => loginWithRedirect()}
-            className="px-6 py-3 rounded bg-green-600 hover:bg-green-700 transition text-white font-medium"
-          >
-            Login to Continue
-          </button>
-        </div>
-      </div>
-    );
+    return <p className="text-white text-center mt-20">Please log in to view content.</p>;
   }
 
   return (
@@ -107,9 +99,7 @@ function App() {
             <button
               onClick={fetchStocks}
               className={`px-4 py-2 text-sm rounded ${
-                refreshing
-                  ? "bg-gray-400 cursor-not-allowed"
-                  : "bg-blue-600 hover:bg-blue-700"
+                refreshing ? "bg-gray-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"
               } text-white transition`}
               disabled={refreshing}
             >
@@ -121,9 +111,9 @@ function App() {
             >
               {isDark ? "Light Mode" : "Dark Mode"}
             </button>
-            <p className="text-sm">Welcome, {user?.name}</p>
+            <p className="text-sm">Welcome, {user?.displayName}</p>
             <button
-              onClick={() => logout({ logoutParams: { returnTo: window.location.origin } })}
+              onClick={() => signOut(auth)}
               className="px-4 py-2 text-sm rounded bg-red-600 text-white hover:bg-red-700 transition"
             >
               Logout
@@ -131,26 +121,38 @@ function App() {
           </div>
         </div>
 
-                {filteredStocks.length === 0 ? (
-        refreshing ? (
+        {filteredStocks.length === 0 ? (
+          refreshing ? (
             <p className="text-center text-gray-500 dark:text-gray-400 mt-10">
-            Waking up server, please wait...
+              Waking up server, please wait...
             </p>
-        ) : (
+          ) : (
             <p className="text-center text-gray-500 dark:text-gray-400 mt-10">
-            No stocks found.
+              No stocks found.
             </p>
-        )
+          )
         ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
             {filteredStocks.map((stock) => (
-            <StockCard key={stock.symbol} stock={stock} />
+              <StockCard key={stock.symbol} stock={stock} />
             ))}
-        </div>
+          </div>
         )}
-
       </div>
     </div>
+  );
+}
+
+function App() {
+  return (
+    <AuthProvider>
+      <Router>
+        <Routes>
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="*" element={<MainApp />} />
+        </Routes>
+      </Router>
+    </AuthProvider>
   );
 }
 
