@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { LineChart, Line, ResponsiveContainer, YAxis } from "recharts";
+import { LineChart, Line, ResponsiveContainer, YAxis, CartesianGrid} from "recharts";
 import { Stock } from "../types";
 
 interface Props {
@@ -72,19 +72,50 @@ export default function StockCard({ stock, isTopGainer }: Props) {
         </p>
       )}
 
-      <ResponsiveContainer width="100%" height={60}>
-        <LineChart data={chartData}>
-          <YAxis hide domain={["dataMin", "dataMax"]} />
-          <Line
+        <ResponsiveContainer width="100%" height={60}>
+        <LineChart
+            data={chartData}
+            style={{
+            backgroundColor: document.documentElement.classList.contains("dark")
+                ? "#ffffff" // white in dark mode
+                : "#000000", // black in light mode
+            borderRadius: "4px",
+            padding: "4px",
+            }}
+        >
+            <YAxis
+            width={40}
+            axisLine={false}
+            tickLine={false}
+            tick={{
+                fill: document.documentElement.classList.contains("dark")
+                ? "#111827" // dark text in white bg
+                : "#f3f4f6", // light text in dark bg
+                fontSize: 10,
+            }}
+            tickFormatter={(v) => `$${v.toFixed(0)}`}
+            domain={["dataMin", "dataMax"]}
+            />
+            <Line
             type="monotone"
             dataKey="price"
             stroke={lineColor}
             strokeWidth={2}
             dot={false}
             isAnimationActive={false}
-          />
+            />
+            {/* Grid lines */}
+            <lineChart.Grid
+            strokeDasharray="3 3"
+            stroke={
+                document.documentElement.classList.contains("dark")
+                ? "#d1d5db" // light gray grid on white bg
+                : "#374151" // dark gray grid on black bg
+            }
+            />
         </LineChart>
-      </ResponsiveContainer>
+        </ResponsiveContainer>
+
 
       <div className="mt-4 text-xs text-gray-700 dark:text-gray-300 space-y-1">
         <p>
