@@ -7,3 +7,5 @@ psycopg2-binary==2.9.10
 yfinance==0.2.58
 requests==2.32.3
 pandas==2.2.3
+alembic==1.15.1
+

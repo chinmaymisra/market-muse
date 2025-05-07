@@ -1,13 +1,24 @@
-from pydantic import BaseModel
-from typing import List,Optional
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
+from typing import List
+from app.database import SessionLocal
+from app.services.stock_service import get_stock_data
+from app.schemas.stock import Stock 
+from app.models.stock_cache import StockCache
 
-class Stock(BaseModel):
-    symbol: str
-    name: str
-    full_name: Optional[str] = None
-    exchange: Optional[str] = None
-    price: float
-    change: float
-    percent_change: float
-    history: List[float]
+router = APIRouter()
 
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+@router.get("/stocks", response_model=List[Stock])
+def fetch_stocks(db: Session = Depends(get_db)):
+    symbols = [
+        "AAPL", "MSFT", "GOOG", "TSLA", "AMZN", "META", "NVDA", "NFLX", "BRK-B",
+        "JPM", "UNH", "V", "MA", "PEP", "KO", "DIS", "CSCO", "INTC", "ADBE", "ORCL"
+    ]
+    return get_stock_data(symbols, db)
