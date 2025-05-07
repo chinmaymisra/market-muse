@@ -38,25 +38,14 @@ function MainApp() {
     localStorage.setItem("theme", isDark ? "dark" : "light");
   }, [isDark]);
 
-  useEffect(() => {
-    // 🔍 TEMP DEBUG: Log Firebase ID token to console after login
-    if (user) {
-      user.getIdToken().then(token => {
-        console.log("🔥 Firebase ID Token:", token);
-      });
-    }
-  }, [user]);
-
   const fetchStocks = async () => {
     try {
       setRefreshing(true);
       const token = await user?.getIdToken();
-
       const res = await axios.get("https://api.marketmuse.chinmaymisra.com/stocks", {
         headers: { Authorization: `Bearer ${token}` },
         timeout: 10000,
       });
-
       setStocks(res.data);
       setLastUpdated(new Date().toLocaleTimeString());
     } catch (err) {
@@ -69,11 +58,12 @@ function MainApp() {
 
   useEffect(() => {
     if (isAuthenticated) {
+      console.log("📦 Triggering fetchStocks from useEffect");
       fetchStocks();
       const interval = setInterval(fetchStocks, 42000);
       return () => clearInterval(interval);
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, user]); // 👈 FIX: include user too
 
   const filteredStocks: Stock[] = stocks.filter((stock: Stock) =>
     stock.full_name.toLowerCase().includes(search.toLowerCase()) ||
