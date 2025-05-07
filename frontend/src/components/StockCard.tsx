@@ -1,6 +1,6 @@
-import { Stock } from "../types";
-import { LineChart, Line, ResponsiveContainer, XAxis, YAxis } from "recharts";
 import { useEffect, useState } from "react";
+import { LineChart, Line, ResponsiveContainer, XAxis, YAxis } from "recharts";
+import { Stock } from "../types";
 
 interface Props {
   stock: Stock;
@@ -8,12 +8,16 @@ interface Props {
 }
 
 export default function StockCard({ stock, isTopGainer }: Props) {
-  const [lineColor, setLineColor] = useState("#2563eb"); // blue-600 default
+  const [lineColor, setLineColor] = useState("#22c55e"); // default green
 
   useEffect(() => {
     const isDark = document.documentElement.classList.contains("dark");
-    setLineColor(isDark ? "#60a5fa" : "#2563eb"); // lighter blue in dark mode
-  }, []);
+    const color =
+      stock.change && stock.change < 0
+        ? isDark ? "#f87171" : "#ef4444" // red shades
+        : isDark ? "#4ade80" : "#22c55e"; // green shades
+    setLineColor(color);
+  }, [stock.change]);
 
   const parsedHistory = Array.isArray(stock.history)
     ? stock.history.map((val) => {
@@ -68,21 +72,38 @@ export default function StockCard({ stock, isTopGainer }: Props) {
         </p>
       )}
 
-        <ResponsiveContainer width="100%" height={80}>
+      <ResponsiveContainer width="100%" height={80}>
         <LineChart data={chartData}>
-            <XAxis dataKey="index" tick={false} label={{ value: "Recent Snapshots", position: "insideBottom", offset: -5 }} />
-            <YAxis domain={["dataMin", "dataMax"]} tickFormatter={(v) => `$${v.toFixed(0)}`} width={40} label={{ value: "Price", angle: -90, position: "insideLeft", offset: 10 }} />
-            <Line
+          <XAxis
+            dataKey="index"
+            tick={false}
+            label={{
+              value: "Recent Snapshots",
+              position: "insideBottom",
+              offset: -5,
+            }}
+          />
+          <YAxis
+            domain={["dataMin", "dataMax"]}
+            tickFormatter={(v: number) => `$${v.toFixed(0)}`}
+            width={40}
+            label={{
+              value: "Price",
+              angle: -90,
+              position: "insideLeft",
+              offset: 10,
+            }}
+          />
+          <Line
             type="monotone"
             dataKey="price"
-            stroke={stock.change && stock.change >= 0 ? "#22c55e" : "#ef4444"} // green or red
+            stroke={lineColor}
             strokeWidth={2}
             dot={false}
             isAnimationActive={false}
-            />
+          />
         </LineChart>
-        </ResponsiveContainer>
-
+      </ResponsiveContainer>
 
       <div className="mt-4 text-xs text-gray-700 dark:text-gray-300 space-y-1">
         <p>
