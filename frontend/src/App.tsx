@@ -48,7 +48,7 @@ function MainApp() {
       const token = await user?.getIdToken();
       const res = await axios.get("https://api.marketmuse.chinmaymisra.com/stocks", {
         headers: { Authorization: `Bearer ${token}` },
-        timeout: 10000,
+        timeout: 30000, //30 seconds
       });
       setStocks(res.data);
       setLastUpdated(new Date().toLocaleTimeString());
