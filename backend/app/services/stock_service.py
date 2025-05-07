@@ -52,5 +52,5 @@ def get_stock_data(symbols: List[str], db: Session) -> List[StockCache]:
 
     final = db.query(StockCache).all()
     for stock in final:
-        stock.history = [float(x) for x in stock.history.split(",")] if stock.history else []
+        stock.history = [float(x.strip().replace("{", "").replace("}", "")) for x in stock.history.split(",") if x.strip()] if stock.history else []
     return final
