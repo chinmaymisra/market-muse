@@ -1,5 +1,5 @@
 import { Stock } from "../types";
-import { LineChart, Line, ResponsiveContainer } from "recharts";
+import { LineChart, Line, ResponsiveContainer, XAxis, YAxis } from "recharts";
 
 interface Props {
   stock: Stock;
@@ -7,8 +7,15 @@ interface Props {
 }
 
 export default function StockCard({ stock, isTopGainer }: Props) {
+  const parsedHistory = Array.isArray(stock.history)
+    ? stock.history.map((val) => {
+        const num = typeof val === "number" ? val : parseFloat(val);
+        return isNaN(num) ? 0 : num;
+      })
+    : [];
+
   const chartData =
-    stock.history?.map((price, index) => ({
+    parsedHistory.map((price, index) => ({
       index,
       price,
     })) ?? [];

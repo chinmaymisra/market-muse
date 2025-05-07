@@ -20,7 +20,6 @@ function MainApp() {
 
   const [stocks, setStocks] = useState<Stock[]>([]);
   const [lastUpdated, setLastUpdated] = useState<string>("");
-  const [refreshing, setRefreshing] = useState<boolean>(false);
   const [search, setSearch] = useState<string>("");
   const [isDark, setIsDark] = useState<boolean>(false);
 
@@ -44,27 +43,23 @@ function MainApp() {
 
   const fetchStocks = async () => {
     try {
-      setRefreshing(true);
       const token = await user?.getIdToken();
       const res = await axios.get("https://api.marketmuse.chinmaymisra.com/stocks", {
         headers: { Authorization: `Bearer ${token}` },
-        timeout: 30000, //30 seconds
+        timeout: 30000, // 30 seconds
       });
       setStocks(res.data);
       setLastUpdated(new Date().toLocaleTimeString());
     } catch (err) {
       console.error("Failed to fetch stock data:", err);
       setStocks([]);
-    } finally {
-      setRefreshing(false);
     }
   };
 
   useEffect(() => {
     if (isAuthenticated) {
-      console.log(" Triggering fetchStocks from useEffect");
       fetchStocks();
-      const interval = setInterval(fetchStocks, 42000);
+      const interval = setInterval(fetchStocks, 60000); // Refresh from DB every minute
       return () => clearInterval(interval);
     }
   }, [isAuthenticated, user]);
@@ -109,15 +104,6 @@ function MainApp() {
               className="px-3 py-2 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm rounded-md text-black dark:text-white w-64"
             />
             <button
-              onClick={fetchStocks}
-              disabled={refreshing}
-              className={`px-4 py-2 text-sm rounded ${
-                refreshing ? "bg-gray-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"
-              } text-white transition`}
-            >
-              {refreshing ? "Refreshing..." : "Refresh Now"}
-            </button>
-            <button
               onClick={() => setIsDark(!isDark)}
               className="px-4 py-2 text-sm rounded bg-gray-800 text-white hover:bg-gray-700 transition"
             >
@@ -134,11 +120,7 @@ function MainApp() {
         </div>
 
         {filteredStocks.length === 0 ? (
-          refreshing ? (
-            <p className="text-center text-gray-500 dark:text-gray-400 mt-10">Waking up server, please wait...</p>
-          ) : (
-            <p className="text-center text-gray-500 dark:text-gray-400 mt-10">No stocks found.</p>
-          )
+          <p className="text-center text-gray-500 dark:text-gray-400 mt-10">No stocks found.</p>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
             {filteredStocks.map((stock) => (
