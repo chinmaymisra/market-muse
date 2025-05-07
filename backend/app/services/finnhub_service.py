@@ -1,3 +1,4 @@
+
 import os
 import requests
 from dotenv import load_dotenv
@@ -16,19 +17,18 @@ def get_stock_info(symbol: str):
         quote_resp = requests.get(quote_url, params={"symbol": symbol, "token": FINNHUB_API_KEY})
         profile_resp = requests.get(profile_url, params={"symbol": symbol, "token": FINNHUB_API_KEY})
 
-        # Initialize metrics_data in case of failure
-        metrics_data = {}
+        quote_data = quote_resp.json()
+        profile_data = profile_resp.json()
+
+        # Handle metrics separately and safely
         try:
             metrics_resp = requests.get(metrics_url, params={"symbol": symbol, "metric": "all", "token": FINNHUB_API_KEY})
             metrics_data = metrics_resp.json().get("metric", {})
         except Exception as me:
             print(f"[WARN] Metrics fetch failed for {symbol}: {me}")
+            metrics_data = {}
 
-        quote_data = quote_resp.json()
-        profile_data = profile_resp.json()
-
-        # Instead of skipping, proceed with fallbacks if quote data is incomplete
-        if not quote_data or "c" not in quote_data:
+        if not quote_data or "c" not in quote_data or quote_data.get("c") == 0:
             print(f"[WARN] Incomplete quote data for {symbol}. Proceeding with defaults. Raw: {quote_data}")
             quote_data = {"c": 0, "d": None, "dp": None, "v": 0}
 
