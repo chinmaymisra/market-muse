@@ -4,8 +4,10 @@ import {
   LineChart,
   Line,
   ResponsiveContainer,
+  XAxis,
   YAxis,
   CartesianGrid,
+  Tooltip,
 } from "recharts";
 
 interface Props {
@@ -14,11 +16,11 @@ interface Props {
 }
 
 export default function StockCard({ stock, isTopGainer }: Props) {
-  const [lineColor, setLineColor] = useState("#2563eb");
+  const [chartBg, setChartBg] = useState<string>("#ffffff");
 
   useEffect(() => {
     const isDark = document.documentElement.classList.contains("dark");
-    setLineColor(isDark ? "#60a5fa" : "#2563eb");
+    setChartBg(isDark ? "#ffffff" : "#000000"); // white bg in dark mode, black in light
   }, []);
 
   const parsedHistory = Array.isArray(stock.history)
@@ -37,11 +39,6 @@ export default function StockCard({ stock, isTopGainer }: Props) {
     typeof num === "number"
       ? Intl.NumberFormat("en", { notation: "compact" }).format(num)
       : "—";
-
-  const isDark = document.documentElement.classList.contains("dark");
-  const chartBgColor = isDark ? "#ffffff" : "#000000";
-  const gridColor = isDark ? "#e5e7eb" : "#4b5563";
-  const tickColor = isDark ? "#111827" : "#f3f4f6";
 
   return (
     <div className="bg-white dark:bg-gray-800 shadow rounded-xl p-4 w-full max-w-sm">
@@ -82,16 +79,24 @@ export default function StockCard({ stock, isTopGainer }: Props) {
       <ResponsiveContainer width="100%" height={80}>
         <LineChart
           data={chartData}
-          style={{ backgroundColor: chartBgColor, borderRadius: "4px" }}
+          style={{ backgroundColor: chartBg, borderRadius: "4px" }}
         >
-          <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis dataKey="index" tick={false} />
           <YAxis
-            width={40}
-            axisLine={false}
-            tickLine={false}
-            tick={{ fill: tickColor, fontSize: 10 }}
-            tickFormatter={(v) => `$${v.toFixed(0)}`}
             domain={["dataMin", "dataMax"]}
+            tickFormatter={(v) => `$${v.toFixed(0)}`}
+            width={40}
+          />
+          <Tooltip
+            formatter={(value: any) => `$${parseFloat(value).toFixed(2)}`}
+            labelFormatter={() => ""}
+            contentStyle={{
+              backgroundColor: chartBg,
+              borderColor: "#999",
+              borderRadius: 4,
+              fontSize: 12,
+            }}
           />
           <Line
             type="monotone"
