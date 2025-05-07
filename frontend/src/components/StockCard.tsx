@@ -1,5 +1,6 @@
 import { Stock } from "../types";
 import { LineChart, Line, ResponsiveContainer } from "recharts";
+import { useEffect, useState } from "react";
 
 interface Props {
   stock: Stock;
@@ -7,6 +8,13 @@ interface Props {
 }
 
 export default function StockCard({ stock, isTopGainer }: Props) {
+  const [lineColor, setLineColor] = useState("#2563eb"); // blue-600 default
+
+  useEffect(() => {
+    const isDark = document.documentElement.classList.contains("dark");
+    setLineColor(isDark ? "#60a5fa" : "#2563eb"); // lighter blue in dark mode
+  }, []);
+
   const parsedHistory = Array.isArray(stock.history)
     ? stock.history.map((val) => {
         const num = typeof val === "number" ? val : parseFloat(val);
@@ -14,11 +22,10 @@ export default function StockCard({ stock, isTopGainer }: Props) {
       })
     : [];
 
-  const chartData =
-    parsedHistory.map((price, index) => ({
-      index,
-      price,
-    })) ?? [];
+  const chartData = parsedHistory.map((price, index) => ({
+    index,
+    price,
+  }));
 
   const formatCompactNumber = (num: number | undefined): string =>
     typeof num === "number"
@@ -61,17 +68,21 @@ export default function StockCard({ stock, isTopGainer }: Props) {
         </p>
       )}
 
-      <ResponsiveContainer width="100%" height={50}>
+        <ResponsiveContainer width="100%" height={80}>
         <LineChart data={chartData}>
-          <Line
+            <XAxis dataKey="index" tick={false} label={{ value: "Recent Snapshots", position: "insideBottom", offset: -5 }} />
+            <YAxis domain={["dataMin", "dataMax"]} tickFormatter={(v) => `$${v.toFixed(0)}`} width={40} label={{ value: "Price", angle: -90, position: "insideLeft", offset: 10 }} />
+            <Line
             type="monotone"
             dataKey="price"
-            stroke="#2563eb"
+            stroke={stock.change && stock.change >= 0 ? "#22c55e" : "#ef4444"} // green or red
             strokeWidth={2}
             dot={false}
-          />
+            isAnimationActive={false}
+            />
         </LineChart>
-      </ResponsiveContainer>
+        </ResponsiveContainer>
+
 
       <div className="mt-4 text-xs text-gray-700 dark:text-gray-300 space-y-1">
         <p>
