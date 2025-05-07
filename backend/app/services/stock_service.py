@@ -1,49 +1,32 @@
 from typing import List
 from sqlalchemy.orm import Session
-from datetime import datetime, timedelta
-from fastapi.concurrency import run_in_threadpool
-
-from app.models.stock_cache import StockCache
 from app.services.finnhub_service import get_stock_info
-
+from app.models.stock_cache import StockCache
 
 def get_stock_data(symbols: List[str], db: Session) -> List[StockCache]:
-    now = datetime.utcnow()
-    cache = db.query(StockCache).all()
+    results = []
 
-    # Serve cache immediately
-    for stock in cache:
-        if isinstance(stock.history, str):
-            stock.history = [float(x) for x in stock.history.split(",") if x]
-    symbols_in_cache = {s.symbol for s in cache}
-    symbols_to_fetch = [s for s in symbols if s not in symbols_in_cache]
+    for symbol in symbols:
+        try:
+            info = get_stock_info(symbol)
+            if info:
+                existing = db.query(StockCache).filter_by(symbol=symbol).first()
+                history_str = ",".join(str(x) for x in info.get("history", []))
 
-    # Always trigger async background fetch (do NOT block user)
-    if True:
-        import threading
-        threading.Thread(target=refresh_stocks_if_stale, args=(symbols,)).start()
-
-    return cache
-
-
-def refresh_stocks_if_stale(symbols: List[str]):
-    from app.database import SessionLocal
-    db = SessionLocal()
-
-    try:
-        now = datetime.utcnow()
-        last_updated = db.query(StockCache).order_by(StockCache.last_updated.asc()).first()
-        if last_updated and (now - last_updated.last_updated) < timedelta(hours=12):
-            print("🕒 Cache still fresh, skipping fetch")
-            return
-
-        print("🔄 Fetching fresh stock data from Finnhub")
-        db.query(StockCache).delete()
-
-        for symbol in symbols:
-            try:
-                info = get_stock_info(symbol)
-                if info:
+                if existing:
+                    existing.full_name = info["full_name"]
+                    existing.name = info["name"]
+                    existing.exchange = info["exchange"]
+                    existing.price = info["price"]
+                    existing.change = info["change"]
+                    existing.percent_change = info["percent_change"]
+                    existing.volume = info["volume"]
+                    existing.pe_ratio = info["pe_ratio"]
+                    existing.market_cap = info["market_cap"]
+                    existing.high_52w = info["52w_high"]
+                    existing.low_52w = info["52w_low"]
+                    existing.history = history_str
+                else:
                     stock = StockCache(
                         symbol=info["symbol"],
                         full_name=info["full_name"],
@@ -52,15 +35,24 @@ def refresh_stocks_if_stale(symbols: List[str]):
                         price=info["price"],
                         change=info.get("change"),
                         percent_change=info.get("percent_change"),
-                        volume=info["volume"],
-                        history=",".join(str(x) for x in info.get("history", [])),
-                        last_updated=now
+                        volume=info.get("volume"),
+                        pe_ratio=info.get("pe_ratio"),
+                        market_cap=info.get("market_cap"),
+                        high_52w=info.get("52w_high"),
+                        low_52w=info.get("52w_low"),
+                        history=history_str
                     )
                     db.add(stock)
-            except Exception as e:
-                print(f"[ERROR] Finnhub fetch failed for {symbol}: {e}")
+                    results.append(stock)
 
-        db.commit()
-        print("✅ Stock cache updated")
-    finally:
-        db.close()
+        except Exception as e:
+            print(f"[ERROR] Finnhub fetch failed for {symbol}: {e}")
+
+    db.commit()
+
+    final = db.query(StockCache).all()
+
+    for stock in final:
+        stock.history = [float(x) for x in stock.history.split(",")] if stock.history else []
+
+    return final
