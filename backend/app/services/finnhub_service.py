@@ -9,6 +9,8 @@ BASE_URL = "https://finnhub.io/api/v1"
 
 def get_stock_info(symbol: str):
     try:
+        print(f"[{symbol}] Metrics keys: {list(metrics_data.keys())}")
+
         quote_url = f"{BASE_URL}/quote"
         profile_url = f"{BASE_URL}/stock/profile2"
         metrics_url = f"{BASE_URL}/stock/metric"
