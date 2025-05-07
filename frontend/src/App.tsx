@@ -11,10 +11,8 @@ import LoginPage from "./pages/LoginPage";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 
 if (typeof window !== "undefined") {
-    // 👇 make auth accessible in browser console
-    (window as any).auth = auth;
-  }
-  
+  (window as any).auth = auth;
+}
 
 function MainApp() {
   const { user, loading } = useAuth();
@@ -64,17 +62,21 @@ function MainApp() {
 
   useEffect(() => {
     if (isAuthenticated) {
-      console.log("📦 Triggering fetchStocks from useEffect");
+      console.log(" Triggering fetchStocks from useEffect");
       fetchStocks();
       const interval = setInterval(fetchStocks, 42000);
       return () => clearInterval(interval);
     }
-  }, [isAuthenticated, user]); // 👈 FIX: include user too
+  }, [isAuthenticated, user]);
 
-  const filteredStocks: Stock[] = stocks.filter((stock: Stock) =>
-    stock.full_name.toLowerCase().includes(search.toLowerCase()) ||
+  const filteredStocks = stocks.filter((stock: Stock) =>
+    (stock.full_name ?? "").toLowerCase().includes(search.toLowerCase()) ||
     stock.symbol.toLowerCase().includes(search.toLowerCase())
   );
+
+  const topGainerSymbol = [...stocks]
+    .filter(s => typeof s.percent_change === "number")
+    .sort((a, b) => (b.percent_change ?? 0) - (a.percent_change ?? 0))[0]?.symbol;
 
   if (loading) {
     return (
@@ -140,7 +142,7 @@ function MainApp() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
             {filteredStocks.map((stock) => (
-              <StockCard key={stock.symbol} stock={stock} />
+              <StockCard key={stock.symbol} stock={stock} isTopGainer={stock.symbol === topGainerSymbol} />
             ))}
           </div>
         )}
