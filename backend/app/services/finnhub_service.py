@@ -27,9 +27,10 @@ def get_stock_info(symbol: str):
         quote_data = quote_resp.json()
         profile_data = profile_resp.json()
 
-        if quote_data.get("c", 0) == 0:
-            print(f"[WARN] Skipping {symbol} due to missing quote data.")
-            return None
+        # Instead of skipping, proceed with fallbacks if quote data is incomplete
+        if not quote_data or "c" not in quote_data:
+            print(f"[WARN] Incomplete quote data for {symbol}. Proceeding with defaults. Raw: {quote_data}")
+            quote_data = {"c": 0, "d": None, "dp": None, "v": 0}
 
         return {
             "symbol": symbol,
