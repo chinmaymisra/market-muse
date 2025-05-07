@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { auth, provider } from "../firebase";
 import { signInWithPopup } from "firebase/auth";
+import { authFetch } from "@/utils/authFetch";
 
 export const LoginButton = () => {
   const navigate = useNavigate();
@@ -17,7 +18,7 @@ export const LoginButton = () => {
       }
 
       // 🔁 Send token to backend to persist the user
-      const res = await fetch("https://api.marketmuse.chinmaymisra.com/users/me", {
+      const res = await authFetch("https://api.marketmuse.chinmaymisra.com/users/me", {
         method: "GET",
         headers: {
           Authorization: `Bearer ${idToken}`,
