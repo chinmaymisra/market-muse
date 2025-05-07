@@ -43,7 +43,6 @@ function MainApp() {
 
   const fetchStocks = async () => {
     try {
-      setRefreshing(true);
       const token = await user?.getIdToken();
       const res = await axios.get("https://api.marketmuse.chinmaymisra.com/stocks", {
         headers: { Authorization: `Bearer ${token}` },
@@ -54,10 +53,9 @@ function MainApp() {
     } catch (err) {
       console.error("Failed to fetch stock data:", err);
       setStocks([]);
-    } finally {
-      setRefreshing(false);
     }
   };
+  
 
   useEffect(() => {
     if (isAuthenticated) {
