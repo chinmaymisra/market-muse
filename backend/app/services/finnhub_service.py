@@ -17,6 +17,7 @@ def get_stock_info(symbol: str):
 
         quote_data = quote_resp.json()
         profile_data = profile_resp.json()
+        print(f"[DEBUG] Info for {symbol} → {info}")
 
         return {
             "symbol": symbol,

@@ -40,3 +40,7 @@ async def log_all_requests(request, call_next):
 @app.api_route("/", methods = ["GET","HEAD"])
 def root():
     return JSONResponse(content = {"message": "Welcome to MarketMuse API"})
+
+@app.get("/ping")
+def ping():
+    return {"message": "pong"}

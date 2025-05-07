@@ -12,21 +12,34 @@ from app.models.user import User as DBUser
 
 load_dotenv()
 
-#  Load credentials from environment variable
-firebase_json = os.getenv("FIREBASE_CREDENTIALS_JSON")
-if not firebase_json:
-    raise RuntimeError("Missing FIREBASE_CREDENTIALS_JSON environment variable")
+# import pathlib
+# print("📦 CURRENT WORKING DIR:", os.getcwd())
+# print("📦 .env found at:", pathlib.Path(".env").absolute().exists())
+# print("📦 FIREBASE_CREDENTIALS_FILE:", os.getenv("FIREBASE_CREDENTIALS_FILE"))
+# print("📦 JSON file exists:", os.path.isfile(os.getenv("FIREBASE_CREDENTIALS_FILE") or ""))
 
-try:
-    firebase_dict = json.loads(firebase_json)
-    cred = credentials.Certificate(firebase_dict)
-    firebase_admin.initialize_app(cred)
-except Exception as e:
-    raise RuntimeError(f"Failed to initialize Firebase Admin SDK: {e}")
+firebase_json = os.getenv("FIREBASE_CREDENTIALS_JSON")
+firebase_file = os.getenv("FIREBASE_CREDENTIALS_FILE", "./firebase-service-account.json")
+
+# Initialize Firebase only once
+if not firebase_admin._apps:
+    try:
+        if firebase_json and firebase_json.strip():
+            # ✅ Render-style full JSON string
+            firebase_dict = json.loads(firebase_json)
+            cred = credentials.Certificate(firebase_dict)
+        elif os.path.isfile(firebase_file):
+            # ✅ Local dev file fallback
+            cred = credentials.Certificate(firebase_file)
+        else:
+            raise RuntimeError("Missing Firebase credentials. Set FIREBASE_CREDENTIALS_JSON or FIREBASE_CREDENTIALS_FILE")
+
+        firebase_admin.initialize_app(cred)
+    except Exception as e:
+        raise RuntimeError(f"Failed to initialize Firebase Admin SDK: {e}")
 
 http_bearer = HTTPBearer()
 
-#  Verifies Firebase token sent from frontend
 def verify_token(token: str):
     try:
         decoded_token = firebase_auth.verify_id_token(token)
@@ -43,7 +56,6 @@ def verify_token(token: str):
 def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(http_bearer)):
     return verify_token(credentials.credentials)
 
-#  For database session
 def get_db():
     db = SessionLocal()
     try:
@@ -51,7 +63,6 @@ def get_db():
     finally:
         db.close()
 
-#  Only allow admin users to proceed
 def require_admin(user=Depends(get_current_user), db: Session = Depends(get_db)):
     db_user = db.query(DBUser).filter(DBUser.uid == user["uid"]).first()
     if not db_user or not db_user.is_admin:
