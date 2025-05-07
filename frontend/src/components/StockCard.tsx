@@ -1,6 +1,12 @@
 import { useEffect, useState } from "react";
-import { LineChart, Line, ResponsiveContainer, YAxis, CartesianGrid} from "recharts";
 import { Stock } from "../types";
+import {
+  LineChart,
+  Line,
+  ResponsiveContainer,
+  YAxis,
+  CartesianGrid,
+} from "recharts";
 
 interface Props {
   stock: Stock;
@@ -8,18 +14,14 @@ interface Props {
 }
 
 export default function StockCard({ stock, isTopGainer }: Props) {
-  const [lineColor, setLineColor] = useState("#22c55e");
+  const [lineColor, setLineColor] = useState("#2563eb");
 
   useEffect(() => {
     const isDark = document.documentElement.classList.contains("dark");
-    const color =
-      stock.change && stock.change < 0
-        ? isDark ? "#f87171" : "#ef4444"
-        : isDark ? "#4ade80" : "#22c55e";
-    setLineColor(color);
-  }, [stock.change]);
+    setLineColor(isDark ? "#60a5fa" : "#2563eb");
+  }, []);
 
-  const parsedHistory: number[] = Array.isArray(stock.history)
+  const parsedHistory = Array.isArray(stock.history)
     ? stock.history.map((val) => {
         const num = typeof val === "number" ? val : parseFloat(val);
         return isNaN(num) ? 0 : num;
@@ -35,6 +37,11 @@ export default function StockCard({ stock, isTopGainer }: Props) {
     typeof num === "number"
       ? Intl.NumberFormat("en", { notation: "compact" }).format(num)
       : "—";
+
+  const isDark = document.documentElement.classList.contains("dark");
+  const chartBgColor = isDark ? "#ffffff" : "#000000";
+  const gridColor = isDark ? "#e5e7eb" : "#4b5563";
+  const tickColor = isDark ? "#111827" : "#f3f4f6";
 
   return (
     <div className="bg-white dark:bg-gray-800 shadow rounded-xl p-4 w-full max-w-sm">
@@ -72,50 +79,30 @@ export default function StockCard({ stock, isTopGainer }: Props) {
         </p>
       )}
 
-        <ResponsiveContainer width="100%" height={60}>
+      <ResponsiveContainer width="100%" height={80}>
         <LineChart
-            data={chartData}
-            style={{
-            backgroundColor: document.documentElement.classList.contains("dark")
-                ? "#ffffff" // white in dark mode
-                : "#000000", // black in light mode
-            borderRadius: "4px",
-            padding: "4px",
-            }}
+          data={chartData}
+          style={{ backgroundColor: chartBgColor, borderRadius: "4px" }}
         >
-            <YAxis
+          <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />
+          <YAxis
             width={40}
             axisLine={false}
             tickLine={false}
-            tick={{
-                fill: document.documentElement.classList.contains("dark")
-                ? "#111827" // dark text in white bg
-                : "#f3f4f6", // light text in dark bg
-                fontSize: 10,
-            }}
+            tick={{ fill: tickColor, fontSize: 10 }}
             tickFormatter={(v) => `$${v.toFixed(0)}`}
             domain={["dataMin", "dataMax"]}
-            />
-            <Line
+          />
+          <Line
             type="monotone"
             dataKey="price"
-            stroke={lineColor}
+            stroke={stock.change && stock.change >= 0 ? "#22c55e" : "#ef4444"}
             strokeWidth={2}
             dot={false}
             isAnimationActive={false}
-            />
-            {/* Grid lines */}
-            <lineChart.Grid
-            strokeDasharray="3 3"
-            stroke={
-                document.documentElement.classList.contains("dark")
-                ? "#d1d5db" // light gray grid on white bg
-                : "#374151" // dark gray grid on black bg
-            }
-            />
+          />
         </LineChart>
-        </ResponsiveContainer>
-
+      </ResponsiveContainer>
 
       <div className="mt-4 text-xs text-gray-700 dark:text-gray-300 space-y-1">
         <p>
