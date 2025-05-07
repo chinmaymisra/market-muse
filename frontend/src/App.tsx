@@ -38,6 +38,15 @@ function MainApp() {
     localStorage.setItem("theme", isDark ? "dark" : "light");
   }, [isDark]);
 
+  useEffect(() => {
+    // 🔍 TEMP DEBUG: Log Firebase ID token to console after login
+    if (user) {
+      user.getIdToken().then(token => {
+        console.log("🔥 Firebase ID Token:", token);
+      });
+    }
+  }, [user]);
+
   const fetchStocks = async () => {
     try {
       setRefreshing(true);
