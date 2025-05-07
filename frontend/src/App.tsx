@@ -20,6 +20,7 @@ function MainApp() {
 
   const [stocks, setStocks] = useState<Stock[]>([]);
   const [lastUpdated, setLastUpdated] = useState<string>("");
+  const [refreshing, setRefreshing] = useState<boolean>(false);
   const [search, setSearch] = useState<string>("");
   const [isDark, setIsDark] = useState<boolean>(false);
 
@@ -43,23 +44,26 @@ function MainApp() {
 
   const fetchStocks = async () => {
     try {
+      setRefreshing(true);
       const token = await user?.getIdToken();
       const res = await axios.get("https://api.marketmuse.chinmaymisra.com/stocks", {
         headers: { Authorization: `Bearer ${token}` },
-        timeout: 30000, // 30 seconds
+        timeout: 30000,
       });
       setStocks(res.data);
       setLastUpdated(new Date().toLocaleTimeString());
     } catch (err) {
       console.error("Failed to fetch stock data:", err);
       setStocks([]);
+    } finally {
+      setRefreshing(false);
     }
   };
 
   useEffect(() => {
     if (isAuthenticated) {
       fetchStocks();
-      const interval = setInterval(fetchStocks, 60000); // Refresh from DB every minute
+      const interval = setInterval(fetchStocks, 60000);
       return () => clearInterval(interval);
     }
   }, [isAuthenticated, user]);
@@ -84,9 +88,7 @@ function MainApp() {
     );
   }
 
-  if (!isAuthenticated) {
-    return null;
-  }
+  if (!isAuthenticated) return null;
 
   return (
     <div className={`min-h-screen w-screen overflow-x-hidden ${isDark ? "dark bg-gray-900" : "bg-gray-100"} p-6`}>
@@ -120,7 +122,10 @@ function MainApp() {
         </div>
 
         {filteredStocks.length === 0 ? (
-          <p className="text-center text-gray-500 dark:text-gray-400 mt-10">No stocks found.</p>
+          <div className="flex flex-col items-center justify-center mt-20 text-gray-500 dark:text-gray-400">
+            <div className="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-3" />
+            <p className="text-sm animate-pulse">Loading stocks, please wait...</p>
+          </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
             {filteredStocks.map((stock) => (
