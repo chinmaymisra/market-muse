@@ -20,7 +20,6 @@ function MainApp() {
 
   const [stocks, setStocks] = useState<Stock[]>([]);
   const [lastUpdated, setLastUpdated] = useState<string>("");
-  const [refreshing, setRefreshing] = useState<boolean>(false);
   const [search, setSearch] = useState<string>("");
   const [isDark, setIsDark] = useState<boolean>(false);
 
