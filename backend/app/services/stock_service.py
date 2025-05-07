@@ -15,9 +15,13 @@ def get_stock_data(symbols: List[str], db: Session) -> List[StockCache]:
                 stock = StockCache(
                     symbol=info["symbol"],
                     full_name=info["full_name"],
+                    name=info.get("name"),
+                    exchange=info.get("exchange"),
                     price=info["price"],
-                    change_percent=info["change_percent"],
-                    volume=info["volume"]
+                    change=info.get("change"),
+                    percent_change=info.get("percent_change"),
+                    volume=info["volume"],
+                    history=",".join(str(x) for x in info.get("history", []))
                 )
                 db.add(stock)
                 results.append(stock)
@@ -25,4 +29,10 @@ def get_stock_data(symbols: List[str], db: Session) -> List[StockCache]:
             print(f"[ERROR] Finnhub fetch failed for {symbol}: {e}")
 
     db.commit()
+
+    # Convert history string back to list
+    for stock in results:
+        if stock.history:
+            stock.history = [float(x) for x in stock.history.split(",")]
+
     return results

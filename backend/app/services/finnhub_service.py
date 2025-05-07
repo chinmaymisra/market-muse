@@ -21,9 +21,18 @@ def get_stock_info(symbol: str):
         return {
             "symbol": symbol,
             "full_name": profile_data.get("name", symbol),
+            "name": profile_data.get("name"),
+            "exchange": profile_data.get("exchange"),
             "price": quote_data.get("c", 0),
-            "change_percent": quote_data.get("dp", 0),
+            "change": quote_data.get("d"),
+            "percent_change": quote_data.get("dp"),
             "volume": quote_data.get("v", 0),
+            "history": [  # fake history for demo
+                quote_data.get("c", 0) * 0.97,
+                quote_data.get("c", 0) * 0.99,
+                quote_data.get("c", 0) * 1.01,
+                quote_data.get("c", 0)
+            ]
         }
 
     except Exception as e:

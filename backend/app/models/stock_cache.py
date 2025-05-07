@@ -6,6 +6,10 @@ class StockCache(Base):
 
     symbol = Column(String, primary_key=True, index=True)
     full_name = Column(String)
+    name = Column(String)  # NEW
+    exchange = Column(String)  # NEW
     price = Column(Float)
-    change_percent = Column(Float)
+    change = Column(Float)  # NEW
+    percent_change = Column(Float)  # NEW
     volume = Column(Integer)
+    history = Column(String)  # NEW: store as comma-separated numbers
