@@ -18,7 +18,14 @@ def get_db():
 @router.get("/stocks", response_model=List[Stock])
 def fetch_stocks(db: Session = Depends(get_db)):
     symbols = [
-        "AAPL", "MSFT", "GOOG", "TSLA", "AMZN", "META", "NVDA", "NFLX", "BRK-B",
-        "JPM", "UNH", "V", "MA", "PEP", "KO", "DIS", "CSCO", "INTC", "ADBE", "ORCL"
+        "AAPL", "MSFT", "GOOG", "TSLA", "AMZN", "META", "NVDA", "NFLX"
     ]
     return get_stock_data(symbols, db)
+
+
+
+
+    # symbols = [
+    #     "AAPL", "MSFT", "GOOG", "TSLA", "AMZN", "META", "NVDA", "NFLX", "BRK-B",
+    #     "JPM", "UNH", "V", "MA", "PEP", "KO", "DIS", "CSCO", "INTC", "ADBE", "ORCL"
+    # ]
