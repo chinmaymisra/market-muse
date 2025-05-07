@@ -1,4 +1,5 @@
-from sqlalchemy import Column, String, Float, Integer
+from sqlalchemy import Column, String, Float, Integer, DateTime
+from datetime import datetime
 from app.database import Base
 
 class StockCache(Base):
@@ -6,10 +7,11 @@ class StockCache(Base):
 
     symbol = Column(String, primary_key=True, index=True)
     full_name = Column(String)
-    name = Column(String)  # NEW
-    exchange = Column(String)  # NEW
+    name = Column(String)
+    exchange = Column(String)
     price = Column(Float)
-    change = Column(Float)  # NEW
-    percent_change = Column(Float)  # NEW
+    change = Column(Float)
+    percent_change = Column(Float)
     volume = Column(Integer)
-    history = Column(String)  # NEW: store as comma-separated numbers
+    history = Column(String)  # comma-separated string
+    last_updated = Column(DateTime, default=datetime.utcnow)
