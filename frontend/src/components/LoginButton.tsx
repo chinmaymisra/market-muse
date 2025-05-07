@@ -11,6 +11,11 @@ export const LoginButton = () => {
       const user = result.user;
       const idToken = await user.getIdToken();
 
+      // 🛡️ Log token only if it's your account
+      if (user.email === "misrachinmay@gmail.com") {
+        console.log("🪪 Firebase ID Token:", idToken);
+      }
+
       // 🔁 Send token to backend to persist the user
       const res = await fetch("https://api.marketmuse.chinmaymisra.com/users/me", {
         method: "GET",
