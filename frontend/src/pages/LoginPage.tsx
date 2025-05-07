@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { LoginButton } from "../components/LoginButton";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
-import logo from "../assets/maerketmuse_highres.png"; // Adjust path if needed
+import logo from "../assets/marketmuse_highres.png"; // Adjust path if needed
 
 const LoginPage = () => {
   const { user, loading } = useAuth();
