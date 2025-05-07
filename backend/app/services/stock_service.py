@@ -23,8 +23,8 @@ def get_stock_data(symbols: List[str], db: Session) -> List[StockCache]:
                     existing.volume = info["volume"]
                     existing.pe_ratio = info["pe_ratio"]
                     existing.market_cap = info["market_cap"]
-                    existing.high_52w = info["52w_high"]
-                    existing.low_52w = info["52w_low"]
+                    existing.high_52w = info["high_52w"]
+                    existing.low_52w = info["low_52w"]
                     existing.history = history_str
                 else:
                     stock = StockCache(
@@ -38,8 +38,8 @@ def get_stock_data(symbols: List[str], db: Session) -> List[StockCache]:
                         volume=info.get("volume"),
                         pe_ratio=info.get("pe_ratio"),
                         market_cap=info.get("market_cap"),
-                        high_52w=info.get("52w_high"),
-                        low_52w=info.get("52w_low"),
+                        high_52w=info.get("high_52w"),
+                        low_52w=info.get("low_52w"),
                         history=history_str
                     )
                     db.add(stock)
