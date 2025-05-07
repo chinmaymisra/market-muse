@@ -10,6 +10,12 @@ import { auth } from "./firebase";
 import LoginPage from "./pages/LoginPage";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 
+if (typeof window !== "undefined") {
+    // 👇 make auth accessible in browser console
+    (window as any).auth = auth;
+  }
+  
+
 function MainApp() {
   const { user, loading } = useAuth();
   const isAuthenticated = !!user;
