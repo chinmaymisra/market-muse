@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { LineChart, Line, ResponsiveContainer, XAxis, YAxis } from "recharts";
+import { LineChart, Line, ResponsiveContainer, YAxis } from "recharts";
 import { Stock } from "../types";
 
 interface Props {
@@ -8,18 +8,18 @@ interface Props {
 }
 
 export default function StockCard({ stock, isTopGainer }: Props) {
-  const [lineColor, setLineColor] = useState("#22c55e"); // default green
+  const [lineColor, setLineColor] = useState("#22c55e");
 
   useEffect(() => {
     const isDark = document.documentElement.classList.contains("dark");
     const color =
       stock.change && stock.change < 0
-        ? isDark ? "#f87171" : "#ef4444" // red shades
-        : isDark ? "#4ade80" : "#22c55e"; // green shades
+        ? isDark ? "#f87171" : "#ef4444"
+        : isDark ? "#4ade80" : "#22c55e";
     setLineColor(color);
   }, [stock.change]);
 
-  const parsedHistory = Array.isArray(stock.history)
+  const parsedHistory: number[] = Array.isArray(stock.history)
     ? stock.history.map((val) => {
         const num = typeof val === "number" ? val : parseFloat(val);
         return isNaN(num) ? 0 : num;
@@ -72,28 +72,9 @@ export default function StockCard({ stock, isTopGainer }: Props) {
         </p>
       )}
 
-      <ResponsiveContainer width="100%" height={80}>
+      <ResponsiveContainer width="100%" height={60}>
         <LineChart data={chartData}>
-          <XAxis
-            dataKey="index"
-            tick={false}
-            label={{
-              value: "Recent Snapshots",
-              position: "insideBottom",
-              offset: -5,
-            }}
-          />
-          <YAxis
-            domain={["dataMin", "dataMax"]}
-            tickFormatter={(v: number) => `$${v.toFixed(0)}`}
-            width={40}
-            label={{
-              value: "Price",
-              angle: -90,
-              position: "insideLeft",
-              offset: 10,
-            }}
-          />
+          <YAxis hide domain={["dataMin", "dataMax"]} />
           <Line
             type="monotone"
             dataKey="price"
