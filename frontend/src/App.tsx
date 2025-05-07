@@ -12,7 +12,6 @@ import { AuthProvider, useAuth } from "./context/AuthContext";
 
 function MainApp() {
   const { user, loading } = useAuth();
-  const navigate = useNavigate();
   const isAuthenticated = !!user;
 
   const [stocks, setStocks] = useState<Stock[]>([]);
@@ -21,8 +20,10 @@ function MainApp() {
   const [search, setSearch] = useState<string>("");
   const [isDark, setIsDark] = useState<boolean>(false);
 
+  const navigate = useNavigate();
+
   useEffect(() => {
-    if (!loading && !user) {
+    if (!loading && !user && navigate) {
       navigate("/login");
     }
   }, [user, loading, navigate]);
