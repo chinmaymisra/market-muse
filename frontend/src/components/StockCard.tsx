@@ -1,5 +1,5 @@
 import { Stock } from "../types";
-import { LineChart, Line, ResponsiveContainer } from "recharts";
+import { LineChart, Line, ResponsiveContainer, XAxis, YAxis } from "recharts";
 import { useEffect, useState } from "react";
 
 interface Props {
