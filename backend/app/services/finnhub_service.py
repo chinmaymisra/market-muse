@@ -9,19 +9,27 @@ BASE_URL = "https://finnhub.io/api/v1"
 
 def get_stock_info(symbol: str):
     try:
-        print(f"[{symbol}] Metrics keys: {list(metrics_data.keys())}")
-
         quote_url = f"{BASE_URL}/quote"
         profile_url = f"{BASE_URL}/stock/profile2"
         metrics_url = f"{BASE_URL}/stock/metric"
 
         quote_resp = requests.get(quote_url, params={"symbol": symbol, "token": FINNHUB_API_KEY})
         profile_resp = requests.get(profile_url, params={"symbol": symbol, "token": FINNHUB_API_KEY})
-        metrics_resp = requests.get(metrics_url, params={"symbol": symbol, "metric": "all", "token": FINNHUB_API_KEY})
+
+        # Initialize metrics_data in case of failure
+        metrics_data = {}
+        try:
+            metrics_resp = requests.get(metrics_url, params={"symbol": symbol, "metric": "all", "token": FINNHUB_API_KEY})
+            metrics_data = metrics_resp.json().get("metric", {})
+        except Exception as me:
+            print(f"[WARN] Metrics fetch failed for {symbol}: {me}")
 
         quote_data = quote_resp.json()
         profile_data = profile_resp.json()
-        metrics_data = metrics_resp.json().get("metric", {})
+
+        if quote_data.get("c", 0) == 0:
+            print(f"[WARN] Skipping {symbol} due to missing quote data.")
+            return None
 
         return {
             "symbol": symbol,
@@ -45,5 +53,5 @@ def get_stock_info(symbol: str):
         }
 
     except Exception as e:
-        print(f"[Finnhub] Failed for symbol {symbol}: {e}")
+        print(f"[ERROR] Finnhub fetch failed for {symbol}: {e}")
         return None
