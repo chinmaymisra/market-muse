@@ -40,6 +40,16 @@ if not firebase_admin._apps:
 
 http_bearer = HTTPBearer()
 
+
+
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+        
 def verify_token(token: str):
     try:
         decoded_token = firebase_auth.verify_id_token(token)
@@ -75,12 +85,7 @@ def get_current_user(
     return db_user
 
 
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+
 
 def require_admin(user=Depends(get_current_user), db: Session = Depends(get_db)):
     db_user = db.query(DBUser).filter(DBUser.uid == user["uid"]).first()
