@@ -17,7 +17,8 @@ app = FastAPI(title="MarketMuse - Stock Prediction API", lifespan=lifespan)
 origins = [
     "http://localhost:5173",  # dev frontend
     "https://marketmuse.chinmaymisra.com",  # prod frontend
-]
+    "https://api.marketmuse.chinmaymisra.com" #prod backend
+ ]
 
 app.add_middleware(
     CORSMiddleware,
