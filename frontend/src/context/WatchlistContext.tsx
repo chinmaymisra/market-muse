@@ -23,7 +23,11 @@ export const WatchlistProvider = ({ children }: { children: ReactNode }) => {
       const res = await axios.get("https://api.marketmuse.chinmaymisra.com/watchlist", {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setWatchlist(res.data);
+
+      const symbols = Array.isArray(res.data)
+        ? res.data.map((stock) => stock.symbol)
+        : [];
+      setWatchlist(symbols);
     } catch (err) {
       console.error("Failed to fetch watchlist:", err);
     }
@@ -36,15 +40,16 @@ export const WatchlistProvider = ({ children }: { children: ReactNode }) => {
       const token = await user.getIdToken();
 
       if (watchlist.includes(symbol)) {
-        await axios.delete("https://api.marketmuse.chinmaymisra.com/watchlist", {
-          data: { symbol },
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        await axios.post(
+          `https://api.marketmuse.chinmaymisra.com/watchlist/remove/${symbol}`,
+          {},
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
         setWatchlist((prev) => prev.filter((s) => s !== symbol));
       } else {
         await axios.post(
-          "https://api.marketmuse.chinmaymisra.com/watchlist",
-          { symbol },
+          `https://api.marketmuse.chinmaymisra.com/watchlist/add/${symbol}`,
+          {},
           { headers: { Authorization: `Bearer ${token}` } }
         );
         setWatchlist((prev) => [...prev, symbol]);
