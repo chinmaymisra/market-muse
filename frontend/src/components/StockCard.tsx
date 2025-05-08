@@ -38,18 +38,6 @@ export default function StockCard({ stock, isTopGainer }: Props) {
 
   return (
     <div className="bg-white dark:bg-gray-800 shadow rounded-xl p-4 w-full max-w-sm relative">
-      <div className="absolute top-2 right-2">
-        <button
-          onClick={() => toggleWatchlist(stock.symbol)}
-          className={`text-xl font-bold ${
-            isInWatchlist ? "text-green-500" : "text-blue-400"
-          }`}
-          title={isInWatchlist ? "Remove from Watchlist" : "Add to Watchlist"}
-        >
-          +
-        </button>
-      </div>
-
       <div className="flex justify-between items-start mb-2">
         <div>
           <h2 className="font-semibold text-base text-gray-800 dark:text-white">
@@ -128,6 +116,18 @@ export default function StockCard({ stock, isTopGainer }: Props) {
           <strong>52W Low:</strong>{" "}
           {stock.low_52w ? `$${stock.low_52w.toFixed(2)}` : "—"}
         </p>
+      </div>
+
+      <div className="absolute bottom-2 right-2">
+        <button
+          onClick={() => toggleWatchlist(stock.symbol)}
+          className={`text-xl font-bold ${
+            isInWatchlist ? "text-green-500" : "text-blue-400"
+          }`}
+          title={isInWatchlist ? "Remove from Watchlist" : "Add to Watchlist"}
+        >
+          +
+        </button>
       </div>
     </div>
   );
