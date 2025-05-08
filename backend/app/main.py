@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from app.routers import stocks, users
+from app.routers import stocks, users, watchlist
 from fastapi.middleware.cors import CORSMiddleware
 from app import database
 from contextlib import asynccontextmanager
@@ -29,6 +29,7 @@ app.add_middleware(
 
 app.include_router(stocks.router)
 app.include_router(users.router)
+app.include_router(watchlist.router)
 
 @app.middleware("http")
 async def log_all_requests(request, call_next):
