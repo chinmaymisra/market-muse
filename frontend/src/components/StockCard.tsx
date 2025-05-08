@@ -1,13 +1,14 @@
+import { useContext } from "react";
 import { Stock } from "../types";
 import {
   LineChart,
   Line,
   ResponsiveContainer,
   YAxis,
-  Tooltip,
   CartesianGrid,
+  Tooltip,
 } from "recharts";
-import { useEffect, useState } from "react";
+import { WatchlistContext } from "../context/WatchlistContext";
 
 interface Props {
   stock: Stock;
@@ -15,32 +16,15 @@ interface Props {
 }
 
 export default function StockCard({ stock, isTopGainer }: Props) {
-  const [bgColor, setBgColor] = useState("#ffffff");
+  const { watchlist, toggleWatchlist } = useContext(WatchlistContext);
+  const isInWatchlist = watchlist.includes(stock.symbol);
 
-  useEffect(() => {
-    const isDark = document.documentElement.classList.contains("dark");
-    setBgColor(isDark ? "#ffffff" : "#000000");
-  }, []);
-
-  const rawHistory = Array.isArray(stock.history)
+  const parsedHistory = Array.isArray(stock.history)
     ? stock.history.map((val) => {
         const num = typeof val === "number" ? val : parseFloat(val);
-        return isNaN(num) ? 0 : num;
+        return isNaN(num) ? stock.price ?? 0 : num;
       })
-    : [];
-
-  const isAllZeroOrEmpty =
-    rawHistory.length === 0 || rawHistory.every((v) => v === 0);
-
-  const parsedHistory =
-    isAllZeroOrEmpty && typeof stock.price === "number" && stock.price > 0
-      ? [
-          stock.price * 0.97,
-          stock.price * 0.99,
-          stock.price * 1.01,
-          stock.price,
-        ]
-      : rawHistory;
+    : Array(4).fill(stock.price ?? 0);
 
   const chartData = parsedHistory.map((price, index) => ({
     index,
@@ -53,7 +37,19 @@ export default function StockCard({ stock, isTopGainer }: Props) {
       : "—";
 
   return (
-    <div className="bg-white dark:bg-gray-800 shadow rounded-xl p-4 w-full max-w-sm">
+    <div className="bg-white dark:bg-gray-800 shadow rounded-xl p-4 w-full max-w-sm relative">
+      <div className="absolute top-2 right-2">
+        <button
+          onClick={() => toggleWatchlist(stock.symbol)}
+          className={`text-xl font-bold ${
+            isInWatchlist ? "text-green-500" : "text-blue-400"
+          }`}
+          title={isInWatchlist ? "Remove from Watchlist" : "Add to Watchlist"}
+        >
+          +
+        </button>
+      </div>
+
       <div className="flex justify-between items-start mb-2">
         <div>
           <h2 className="font-semibold text-base text-gray-800 dark:text-white">
@@ -89,16 +85,21 @@ export default function StockCard({ stock, isTopGainer }: Props) {
       )}
 
       <ResponsiveContainer width="100%" height={80}>
-        <LineChart data={chartData} style={{ background: bgColor }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#ccc" />
+        <LineChart data={chartData}>
+          <CartesianGrid strokeDasharray="3 3" />
           <YAxis
             domain={["dataMin", "dataMax"]}
-            tickFormatter={(v) => `$${v.toFixed(0)}`}
+            tickFormatter={(v: number) => `$${v.toFixed(0)}`}
             width={40}
           />
           <Tooltip
-            formatter={(value: number) => [`$${value.toFixed(2)}`, "Price"]}
+            formatter={(value: number) => `$${value.toFixed(2)}`}
             labelFormatter={() => ""}
+            contentStyle={{
+              backgroundColor: "#1f2937",
+              border: "none",
+              color: "#fff",
+            }}
           />
           <Line
             type="monotone"
@@ -117,8 +118,7 @@ export default function StockCard({ stock, isTopGainer }: Props) {
           {stock.pe_ratio ? stock.pe_ratio.toFixed(2) : "—"}
         </p>
         <p>
-          <strong>Market Cap:</strong>{" "}
-          {formatCompactNumber(stock.market_cap)}
+          <strong>Market Cap:</strong> {formatCompactNumber(stock.market_cap)}
         </p>
         <p>
           <strong>52W High:</strong>{" "}

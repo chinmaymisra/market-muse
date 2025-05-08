@@ -9,6 +9,7 @@ import "./index.css";
 import { auth } from "./firebase";
 import LoginPage from "./pages/LoginPage";
 import { AuthProvider, useAuth } from "./context/AuthContext";
+import { WatchlistProvider, useWatchlist } from "./context/WatchlistContext";
 
 if (typeof window !== "undefined") {
   (window as any).auth = auth;
@@ -16,12 +17,14 @@ if (typeof window !== "undefined") {
 
 function MainApp() {
   const { user, loading } = useAuth();
+  const { watchlist } = useWatchlist();
   const isAuthenticated = !!user;
 
   const [stocks, setStocks] = useState<Stock[]>([]);
   const [lastUpdated, setLastUpdated] = useState<string>("");
   const [search, setSearch] = useState<string>("");
   const [isDark, setIsDark] = useState<boolean>(false);
+  const [showWatchlist, setShowWatchlist] = useState<boolean>(false);
 
   const navigate = useNavigate();
 
@@ -55,7 +58,6 @@ function MainApp() {
       setStocks([]);
     }
   };
-  
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -65,7 +67,10 @@ function MainApp() {
     }
   }, [isAuthenticated, user]);
 
-  const filteredStocks = stocks.filter((stock: Stock) =>
+  const filteredStocks = (showWatchlist
+    ? stocks.filter((stock) => watchlist.includes(stock.symbol))
+    : stocks
+  ).filter((stock) =>
     (stock.full_name ?? "").toLowerCase().includes(search.toLowerCase()) ||
     stock.symbol.toLowerCase().includes(search.toLowerCase())
   );
@@ -91,6 +96,29 @@ function MainApp() {
     <div className={`min-h-screen w-screen overflow-x-hidden ${isDark ? "dark bg-gray-900" : "bg-gray-100"} p-6`}>
       <div className="text-gray-900 dark:text-gray-100 max-w-screen-xl mx-auto">
         <h1 className="text-3xl font-bold text-center mb-4">MarketMuse</h1>
+
+        <div className="flex justify-center mb-4 gap-4">
+          <button
+            className={`px-4 py-2 rounded text-sm font-medium ${
+              showWatchlist
+                ? "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-white"
+                : "bg-blue-600 text-white"
+            }`}
+            onClick={() => setShowWatchlist(false)}
+          >
+            All Stocks
+          </button>
+          <button
+            className={`px-4 py-2 rounded text-sm font-medium ${
+              showWatchlist
+                ? "bg-blue-600 text-white"
+                : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-white"
+            }`}
+            onClick={() => setShowWatchlist(true)}
+          >
+            My Watchlist
+          </button>
+        </div>
 
         <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6">
           <p className="text-sm">Last updated: {lastUpdated || "Loading..."}</p>
@@ -119,9 +147,9 @@ function MainApp() {
         </div>
 
         {filteredStocks.length === 0 ? (
-          <div className="flex flex-col items-center justify-center mt-20 text-gray-500 dark:text-gray-400">
-            <div className="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-3" />
-            <p className="text-sm animate-pulse">Loading stocks, please wait...</p>
+          <div className="text-center text-gray-500 dark:text-gray-400 mt-10">
+            <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+            <p>Fetching stock data...</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
@@ -138,12 +166,14 @@ function MainApp() {
 function App() {
   return (
     <AuthProvider>
-      <Router>
-        <Routes>
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="*" element={<MainApp />} />
-        </Routes>
-      </Router>
+      <WatchlistProvider>
+        <Router>
+          <Routes>
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="*" element={<MainApp />} />
+          </Routes>
+        </Router>
+      </WatchlistProvider>
     </AuthProvider>
   );
 }
