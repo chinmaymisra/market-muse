@@ -10,20 +10,33 @@ router = APIRouter(prefix="/watchlist", tags=["Watchlist"])
 
 @router.post("/add/{symbol}")
 def add_to_watchlist(symbol: str, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
-    # Ensure the stock exists in cache
-    stock = db.query(StockCache).filter_by(symbol=symbol).first()
-    if not stock:
-        raise HTTPException(status_code=404, detail="Stock not found")
+    try:
+        print("USER UID:", user.uid)
+        print("SYMBOL:", symbol)
 
-    # Check if it's already in watchlist
-    exists = db.query(Watchlist).filter_by(user_id=user["uid"], symbol=symbol).first()
-    if exists:
-        return {"message": "Already in watchlist"}
+        # Ensure the stock exists in cache
+        stock = db.query(StockCache).filter_by(symbol=symbol).first()
+        if not stock:
+            print(f"Stock {symbol} not found in stock_cache.")
+            raise HTTPException(status_code=404, detail="Stock not found")
 
-    entry = Watchlist(user_id=user["uid"], symbol=symbol)
-    db.add(entry)
-    db.commit()
-    return {"message": "Added to watchlist"}
+        # Check if already in watchlist
+        exists = db.query(Watchlist).filter_by(user_id=user.uid, symbol=symbol).first()
+        if exists:
+            print(f"{symbol} already in watchlist.")
+            return {"message": "Already in watchlist"}
+
+        entry = Watchlist(user_id=user.uid, symbol=symbol)
+        db.add(entry)
+        db.commit()
+        print(f"{symbol} added successfully.")
+        return {"message": "Added to watchlist"}
+
+    except Exception as e:
+        db.rollback()
+        print("❌ ERROR while adding to watchlist:", e)
+        raise HTTPException(status_code=500, detail=str(e))
+
 
 @router.post("/remove/{symbol}")
 def remove_from_watchlist(symbol: str, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
