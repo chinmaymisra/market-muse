@@ -53,8 +53,27 @@ def verify_token(token: str):
         print(f"[Firebase] Token verification failed: {e}")
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid Firebase token")
 
-def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(http_bearer)):
-    return verify_token(credentials.credentials)
+def get_current_user(
+    credentials: HTTPAuthorizationCredentials = Depends(http_bearer),
+    db: Session = Depends(get_db),
+) -> DBUser:
+    firebase_user = verify_token(credentials.credentials)
+    db_user = db.query(DBUser).filter(DBUser.uid == firebase_user["uid"]).first()
+
+    # If user doesn't exist in DB, create and store them
+    if not db_user:
+        db_user = DBUser(
+            uid=firebase_user["uid"],
+            email=firebase_user["email"],
+            name=firebase_user["name"],
+            picture=firebase_user["picture"],
+        )
+        db.add(db_user)
+        db.commit()
+        db.refresh(db_user)
+
+    return db_user
+
 
 def get_db():
     db = SessionLocal()
