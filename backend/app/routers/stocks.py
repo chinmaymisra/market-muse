@@ -1,32 +1,13 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-from typing import List
-from app.services.stock_service import get_stock_data
-from app.schemas.stock import Stock
-from app.database import SessionLocal
-from app.auth import get_current_user
+from app.database import get_db
+from app.models.stock_cache import StockCache
 
-router = APIRouter()
+router = APIRouter(prefix="/stocks", tags=["Stocks"])
 
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-@router.get("/stocks", response_model=List[Stock])
-def fetch_stocks(user=Depends(get_current_user), db: Session = Depends(get_db)):
-    symbols = [
-        "AAPL", "MSFT", "GOOG", "TSLA", "AMZN", "META", "NVDA", "NFLX", "BRK-B",
-        "JPM", "UNH", "V", "MA", "PEP", "KO", "DIS", "CSCO", "INTC", "ADBE", "ORCL"
-    ]
-
-    return get_stock_data(symbols, db)
-
-
-
-
-    # symbols = [
-    #     "AAPL", "MSFT", "GOOG", "TSLA", "AMZN", "META", "NVDA", "NFLX"
-    # ]
+@router.get("/")
+def get_all_cached_stocks(db: Session = Depends(get_db)):
+    stocks = db.query(StockCache).all()
+    for stock in stocks:
+        stock.history = [float(x) for x in stock.history.split(",")] if stock.history else []
+    return stocks
