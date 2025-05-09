@@ -35,9 +35,14 @@ export const WatchlistProvider = ({ children }: { children: ReactNode }) => {
         : [];
 
       setWatchlist(symbols);
-    } catch (err) {
-      console.error("Failed to fetch watchlist:", err);
-    }
+    } catch (err: unknown) {
+        if (axios.isAxiosError(err)) {
+          console.error("❌ Watchlist fetch failed:", err.response?.data || err.message);
+        } else {
+          console.error("❌ Unknown error fetching watchlist:", err);
+        }
+      }
+      
   };
 
   // Adds or removes a stock symbol from watchlist
@@ -70,10 +75,14 @@ export const WatchlistProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // Load watchlist when provider mounts
+  // Load watchlist runs only after Firebase is fully ready wiht a user
   useEffect(() => {
-    fetchWatchlist();
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      if (user) fetchWatchlist();
+    });
+    return () => unsubscribe();
   }, []);
+  
 
   return (
     <WatchlistContext.Provider value={{ watchlist, toggleWatchlist }}>
