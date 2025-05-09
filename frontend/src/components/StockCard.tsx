@@ -1,4 +1,4 @@
-import { useContext } from "react";
+import { useContext, useState } from "react";
 import { Stock } from "../types";
 import {
   LineChart,
@@ -9,6 +9,7 @@ import {
   Tooltip,
 } from "recharts";
 import { WatchlistContext } from "../context/WatchlistContext";
+import clsx from "clsx";
 
 interface Props {
   stock: Stock;
@@ -18,6 +19,13 @@ interface Props {
 export default function StockCard({ stock, isTopGainer }: Props) {
   const { watchlist, toggleWatchlist } = useContext(WatchlistContext);
   const isInWatchlist = watchlist.includes(stock.symbol);
+  const [animating, setAnimating] = useState(false);
+
+  const handleToggle = async () => {
+    setAnimating(true);
+    await toggleWatchlist(stock.symbol);
+    setTimeout(() => setAnimating(false), 300); // animation duration
+  };
 
   const parsedHistory = Array.isArray(stock.history)
     ? stock.history.map((val) => {
@@ -37,7 +45,23 @@ export default function StockCard({ stock, isTopGainer }: Props) {
       : "—";
 
   return (
-    <div className="bg-white dark:bg-gray-800 shadow rounded-xl p-4 w-full max-w-sm relative">
+    <div className="bg-white dark:bg-gray-800 shadow rounded-xl p-4 w-full max-w-sm relative transition-transform duration-300">
+      <div className="absolute bottom-2 right-2">
+        <button
+          onClick={handleToggle}
+          title={isInWatchlist ? "Remove from Watchlist" : "Add to Watchlist"}
+          className={clsx(
+            "text-lg font-bold border rounded-md px-2 py-1 transition-all duration-300 focus:outline-none",
+            animating ? "scale-110" : "scale-100",
+            isInWatchlist
+              ? "text-red-500 border-red-500 hover:bg-red-500 hover:text-white"
+              : "text-blue-500 border-blue-500 hover:bg-blue-500 hover:text-white"
+          )}
+        >
+          {isInWatchlist ? "−" : "+"}
+        </button>
+      </div>
+
       <div className="flex justify-between items-start mb-2">
         <div>
           <h2 className="font-semibold text-base text-gray-800 dark:text-white">
@@ -116,18 +140,6 @@ export default function StockCard({ stock, isTopGainer }: Props) {
           <strong>52W Low:</strong>{" "}
           {stock.low_52w ? `$${stock.low_52w.toFixed(2)}` : "—"}
         </p>
-      </div>
-
-      <div className="absolute bottom-2 right-2">
-        <button
-          onClick={() => toggleWatchlist(stock.symbol)}
-          className={`text-xl font-bold ${
-            isInWatchlist ? "text-green-500" : "text-blue-400"
-          }`}
-          title={isInWatchlist ? "Remove from Watchlist" : "Add to Watchlist"}
-        >
-          +
-        </button>
       </div>
     </div>
   );
