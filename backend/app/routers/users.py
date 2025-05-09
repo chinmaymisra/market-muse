@@ -34,36 +34,39 @@ def get_db():
         db.close()
 
 @router.get("/me", response_model=UserProfile)
-def read_me(user: Dict[str, Any] = Depends(get_current_user), db: Session = Depends(get_db)):
+def read_me(user: DBUser = Depends(get_current_user), db: Session = Depends(get_db)):
     """
     Returns the current authenticated user's profile.
     Auto-registers new users if not found in the database.
 
     Args:
-        user (dict): Decoded Firebase user dictionary.
-        db (Session): SQLAlchemy session.
+        user (DBUser): SQLAlchemy ORM object returned by get_current_user().
+        db (Session): SQLAlchemy DB session.
 
     Returns:
         UserProfile: User profile data in structured Pydantic format.
     """
-    # Check if user already exists in DB
-    existing_user = db.query(DBUser).filter(DBUser.uid == user["uid"]).first()
+    # Check if user already exists in the database using their Firebase UID
+    existing_user = db.query(DBUser).filter(DBUser.uid == user.uid).first()
 
     if not existing_user:
-        # Determine admin access based on email
-        is_admin = user.get("email") in ADMIN_EMAILS
+        # Determine admin privileges using email from .env-defined ADMIN_EMAILS
+        is_admin = user.email in ADMIN_EMAILS
 
-        # Create new user record
+        # Register the user in the database
         new_user = DBUser(
-            uid=user["uid"],
-            email=user.get("email"),
-            name=user.get("name"),
-            picture=user.get("picture"),
+            uid=user.uid,
+            email=user.email,
+            name=user.name,
+            picture=user.picture,
             is_admin=is_admin,
         )
         db.add(new_user)
         db.commit()
         db.refresh(new_user)
-        return new_user  # ✅ ORM object is auto-converted via orm_mode in UserProfile
 
-    return existing_user  # ✅ Pydantic schema will serialize this automatically
+        # Return the newly created user as a Pydantic response model
+        return new_user
+
+    # Return the existing user object (auto-converted to UserProfile via orm_mode)
+    return existing_user
