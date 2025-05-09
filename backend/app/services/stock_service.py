@@ -1,20 +1,37 @@
-
 from typing import List
 from sqlalchemy.orm import Session
 from app.services.finnhub_service import get_stock_info
 from app.models.stock_cache import StockCache
 
 def get_stock_data(symbols: List[str], db: Session) -> List[StockCache]:
+    """
+    Fetches live stock data for a list of symbols from Finnhub,
+    updates or inserts them into the local database, and returns
+    the entire stock cache.
+
+    Args:
+        symbols (List[str]): List of stock ticker symbols (e.g., ["AAPL", "TSLA"]).
+        db (Session): SQLAlchemy DB session.
+
+    Returns:
+        List[StockCache]: Updated list of all cached stock entries.
+    """
     results = []
+
     for symbol in symbols:
         try:
+            # Get enriched stock data from Finnhub
             info = get_stock_info(symbol)
+
             if info:
-                existing = db.query(StockCache).filter_by(symbol=symbol).first()
+                # Convert list of floats to CSV string for DB storage
                 history_str = ",".join(str(x) for x in info.get("history", []))
 
+                # Check if symbol already exists in the cache
+                existing = db.query(StockCache).filter_by(symbol=symbol).first()
+
                 if existing:
-                    # Only update fields with meaningful new values
+                    # Update only if new values are present
                     existing.full_name = info["full_name"] or existing.full_name
                     existing.name = info["name"] or existing.name
                     existing.exchange = info["exchange"] or existing.exchange
@@ -28,6 +45,7 @@ def get_stock_data(symbols: List[str], db: Session) -> List[StockCache]:
                     existing.low_52w = info["low_52w"] or existing.low_52w
                     existing.history = history_str if "history" in info else existing.history
                 else:
+                    # New stock — add to cache
                     stock = StockCache(
                         symbol=info["symbol"],
                         full_name=info["full_name"],
@@ -45,12 +63,20 @@ def get_stock_data(symbols: List[str], db: Session) -> List[StockCache]:
                     )
                     db.add(stock)
                     results.append(stock)
+
         except Exception as e:
             print(f"[ERROR] Finnhub fetch failed for {symbol}: {e}")
 
+    # Commit all insertions/updates to the database
     db.commit()
 
+    # Fetch and format all entries with parsed history for return
     final = db.query(StockCache).all()
     for stock in final:
-        stock.history = [float(x.strip().replace("{", "").replace("}", "")) for x in stock.history.split(",") if x.strip()] if stock.history else []
+        stock.history = [
+            float(x.strip().replace("{", "").replace("}", ""))
+            for x in stock.history.split(",")
+            if x.strip()
+        ] if stock.history else []
+
     return final
