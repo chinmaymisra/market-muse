@@ -11,13 +11,14 @@ import LoginPage from "./pages/LoginPage";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { WatchlistProvider, useWatchlist } from "./context/WatchlistContext";
 
+// Expose Firebase auth globally (for debugging from console)
 if (typeof window !== "undefined") {
   (window as any).auth = auth;
 }
 
 function MainApp() {
-  const { user, loading } = useAuth();
-  const { watchlist } = useWatchlist();
+  const { user, loading } = useAuth(); // Get user auth state
+  const { watchlist } = useWatchlist(); // Get watchlist state
   const isAuthenticated = !!user;
 
   const [stocks, setStocks] = useState<Stock[]>([]);
@@ -28,22 +29,26 @@ function MainApp() {
 
   const navigate = useNavigate();
 
+  // Redirect to /login if not authenticated
   useEffect(() => {
     if (!loading && !user && navigate) {
       navigate("/login");
     }
   }, [user, loading, navigate]);
 
+  // On mount: read theme from localStorage
   useEffect(() => {
     const savedTheme = localStorage.getItem("theme");
     setIsDark(savedTheme === "dark");
   }, []);
 
+  // Toggle document class and persist theme change
   useEffect(() => {
     document.documentElement.classList.toggle("dark", isDark);
     localStorage.setItem("theme", isDark ? "dark" : "light");
   }, [isDark]);
 
+  // Fetch stock data from backend API
   const fetchStocks = async () => {
     try {
       const token = await user?.getIdToken();
@@ -59,6 +64,7 @@ function MainApp() {
     }
   };
 
+  // On login: fetch stocks and refetch every 60s
   useEffect(() => {
     if (isAuthenticated) {
       fetchStocks();
@@ -67,6 +73,7 @@ function MainApp() {
     }
   }, [isAuthenticated, user]);
 
+  // Filter by watchlist or search
   const filteredStocks = (showWatchlist
     ? stocks.filter((stock) => watchlist.includes(stock.symbol))
     : stocks
@@ -75,10 +82,12 @@ function MainApp() {
     stock.symbol.toLowerCase().includes(search.toLowerCase())
   );
 
+  // Determine top gainer symbol
   const topGainerSymbol = [...stocks]
     .filter(s => typeof s.percent_change === "number")
     .sort((a, b) => (b.percent_change ?? 0) - (a.percent_change ?? 0))[0]?.symbol;
 
+  // Show loading screen
   if (loading) {
     return (
       <div className="h-screen w-screen flex items-center justify-center bg-gray-900 text-white">
@@ -92,11 +101,13 @@ function MainApp() {
 
   if (!isAuthenticated) return null;
 
+  // Main UI
   return (
     <div className={`min-h-screen w-screen overflow-x-hidden ${isDark ? "dark bg-gray-900" : "bg-gray-100"} p-6`}>
       <div className="text-gray-900 dark:text-gray-100 max-w-screen-xl mx-auto">
         <h1 className="text-3xl font-bold text-center mb-4">MarketMuse</h1>
 
+        {/* Toggle between All Stocks and Watchlist */}
         <div className="flex justify-center mb-4 gap-4">
           <button
             className={`px-4 py-2 rounded text-sm font-medium ${
@@ -120,6 +131,7 @@ function MainApp() {
           </button>
         </div>
 
+        {/* Top bar: search, theme toggle, greeting, logout */}
         <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6">
           <p className="text-sm">Last updated: {lastUpdated || "Loading..."}</p>
           <div className="flex gap-3 items-center flex-wrap">
@@ -146,6 +158,7 @@ function MainApp() {
           </div>
         </div>
 
+        {/* Display stocks or loading spinner */}
         {filteredStocks.length === 0 ? (
           <div className="text-center text-gray-500 dark:text-gray-400 mt-10">
             <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
@@ -164,6 +177,7 @@ function MainApp() {
 }
 
 function App() {
+  // Wrap app in context providers and router
   return (
     <AuthProvider>
       <WatchlistProvider>
