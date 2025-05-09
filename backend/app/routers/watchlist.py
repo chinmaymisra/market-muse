@@ -6,6 +6,7 @@ from app.models.watchlist import Watchlist
 from app.models.user import User
 from app.models.stock_cache import StockCache
 from app.auth import get_current_user
+from app.schemas.watchlist import WatchlistItem 
 
 # Initialize the API router for watchlist-related endpoints.
 # All routes here will be prefixed with "/watchlist"
@@ -32,19 +33,14 @@ def add_to_watchlist(
     Raises:
         HTTPException: If the stock symbol doesn't exist in cache.
     """
-    print("USER UID:", user.uid)
-    print("SYMBOL:", symbol)
-
     # Check if stock exists in the stock_cache table
     stock = db.query(StockCache).filter_by(symbol=symbol).first()
     if not stock:
-        print(f"Stock {symbol} not found in stock_cache.")
         raise HTTPException(status_code=404, detail="Stock not found")
 
     # Check if already present in watchlist
     exists = db.query(Watchlist).filter_by(user_id=user.uid, symbol=symbol).first()
     if exists:
-        print(f"{symbol} already in watchlist.")
         return {"message": "Already in watchlist"}
 
     # Create and add new watchlist entry
@@ -86,25 +82,21 @@ def remove_from_watchlist(
     return {"message": f"Removed {symbol} from watchlist"}
 
 
-@router.get("/")
+@router.get("/", response_model=list[WatchlistItem])
 def get_watchlist(
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user)
 ):
     """
-    Retrieves the user's current watchlist with stock details.
+    Retrieves the user's current watchlist symbols only.
 
     Args:
         db (Session): SQLAlchemy session object.
         user (User): Authenticated user.
 
     Returns:
-        list[dict]: List of stocks in the user's watchlist with details.
+        list[WatchlistItem]: List of symbols the user is watching.
     """
     # Fetch all watchlist entries for the user
     entries = db.query(Watchlist).filter_by(user_id=user.uid).all()
-    symbols = [entry.symbol for entry in entries]
-
-    # Get stock details from the cache for each symbol
-    stocks = db.query(StockCache).filter(StockCache.symbol.in_(symbols)).all()
-    return [stock.to_dict() for stock in stocks]
+    return entries  # Will be serialized using WatchlistItem schema
