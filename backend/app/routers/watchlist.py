@@ -97,6 +97,8 @@ def get_watchlist(
     Returns:
         list[WatchlistItem]: List of symbols the user is watching.
     """
+    
+    print("Fetching watchlist for user:", user.uid)
     # Fetch all watchlist entries for the user
     entries = db.query(Watchlist).filter_by(user_id=user.uid).all()
     return entries  # Will be serialized using WatchlistItem schema
