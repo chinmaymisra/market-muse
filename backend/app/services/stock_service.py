@@ -73,10 +73,15 @@ def get_stock_data(symbols: List[str], db: Session) -> List[StockCache]:
     # Fetch and format all entries with parsed history for return
     final = db.query(StockCache).all()
     for stock in final:
-        stock.history = [
-            float(x.strip().replace("{", "").replace("}", ""))
-            for x in stock.history.split(",")
-            if x.strip()
-        ] if stock.history else []
+        try:
+            stock.history = [
+                float(x.strip().replace("{", "").replace("}", ""))
+                for x in stock.history.split(",")
+                if x.strip()
+            ] if stock.history else []
+        except ValueError:
+            print(f"[ERROR] Failed to parse history for {stock.symbol}: {stock.history}")
+            stock.history = []
+
 
     return final
