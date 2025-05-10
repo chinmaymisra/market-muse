@@ -78,7 +78,7 @@ function MainApp() {
     ? stocks.filter((stock) => watchlist.includes(stock.symbol))
     : stocks
   ).filter((stock) =>
-    (stock.full_name ?? "").toLowerCase().includes(search.toLowerCase()) ||
+    (stock.name ?? "").toLowerCase().includes(search.toLowerCase()) ||
     stock.symbol.toLowerCase().includes(search.toLowerCase())
   );
 
