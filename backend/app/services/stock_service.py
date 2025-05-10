@@ -25,7 +25,19 @@ def get_stock_data(symbols: List[str], db: Session) -> List[StockCache]:
 
             if info:
                 # Convert list of floats to CSV string for DB storage
-                history_str = ",".join(str(x) for x in info.get("history", []))
+                # Validate and clean the incoming history list
+                raw_history = info.get("history", [])
+                clean_history = []
+
+                for point in raw_history:
+                    try:
+                        clean_history.append(float(point))
+                    except (ValueError, TypeError):
+                        continue  # Skip invalid entries
+
+                # Convert to CSV string for safe DB storage
+                history_str = ",".join(str(p) for p in clean_history)
+
 
                 # Check if symbol already exists in the cache
                 existing = db.query(StockCache).filter_by(symbol=symbol).first()
