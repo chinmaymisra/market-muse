@@ -1,10 +1,11 @@
-import time
 from sqlalchemy.orm import Session
-from sqlalchemy import select, delete, desc
+from sqlalchemy import select, desc
 from app.database import SessionLocal
 from app.models.stock_cache import StockCache
 from app.models.refresh_log_model import RefreshLog
+from app.models.settings_model import Setting
 from app.services.stock_service import get_stock_data
+
 
 def get_symbols_from_db(db: Session):
     """
@@ -12,6 +13,32 @@ def get_symbols_from_db(db: Session):
     """
     results = db.execute(select(StockCache.symbol)).scalars().all()
     return results
+
+
+def get_last_index(db: Session) -> int:
+    """
+    Reads the last_index value from the settings table.
+    Returns 0 if the key doesn't exist yet.
+    """
+    result = db.query(Setting).filter_by(key="last_index").first()
+    if result:
+        return int(result.value)
+    return 0
+
+
+def set_last_index(db: Session, index: int):
+    """
+    Writes the updated last_index back to the settings table.
+    Creates the row if it doesn't exist.
+    """
+    entry = db.query(Setting).filter_by(key="last_index").first()
+    if entry:
+        entry.value = str(index)
+    else:
+        entry = Setting(key="last_index", value=str(index))
+        db.add(entry)
+    db.commit()
+
 
 def trim_refresh_log(db: Session, keep_last_n: int = 10):
     """
@@ -29,49 +56,49 @@ def trim_refresh_log(db: Session, keep_last_n: int = 10):
         db.query(RefreshLog).filter(~RefreshLog.id.in_(keep_ids)).delete(synchronize_session=False)
         db.commit()
 
+
 def main():
     """
-    Background worker that refreshes one stock per minute from the current DB symbol list.
-    Applies update-safe logic and logs the refresh to a limited-size table.
+    GitHub Actions-compatible stock refresher that:
+    - Retrieves list of stock symbols from DB
+    - Uses round-robin index stored in settings
+    - Refreshes 1 stock per run
+    - Logs to refresh_log table
+    - Updates round-robin index in DB
+    - Trims log table to last 10 rows
     """
     db: Session = SessionLocal()
-    i = 0
 
-    while True:
+    try:
+        symbols = get_symbols_from_db(db)
+        if not symbols:
+            print("⚠️ No symbols found in stock_cache.")
+            return
+
+        i = get_last_index(db)
+        symbol = symbols[i % len(symbols)]
+        print(f"🔄 Refreshing {symbol} (index {i})...")
+
         try:
-            symbols = get_symbols_from_db(db)
-            if not symbols:
-                print("⚠️ No symbols found in stock_cache.")
-                time.sleep(60)
-                continue
-
-            # Cycle through available stock symbols in round-robin
-            symbol = symbols[i % len(symbols)]
-            print(f"🔄 Refreshing {symbol}...")
-
-            # Call your existing update logic
             get_stock_data([symbol], db)
-
-            # Log to refresh_log
-            log = RefreshLog(symbol=symbol, status="success")
-            db.add(log)
+            db.add(RefreshLog(symbol=symbol, status="success"))
             db.commit()
-
-            # Trim log table to latest 10
-            trim_refresh_log(db)
-
+            print(f"✅ {symbol} refreshed successfully.")
         except Exception as e:
+            db.rollback()
+            db.add(RefreshLog(symbol=symbol, status=f"error: {e}"))
+            db.commit()
             print(f"❌ Error refreshing {symbol}: {e}")
-            try:
-                db.rollback()
-                db.add(RefreshLog(symbol=symbol, status=f"error: {e}"))
-                db.commit()
-                trim_refresh_log(db)
-            except Exception as rollback_err:
-                print(f"⚠️ Failed to log refresh error: {rollback_err}")
 
-        time.sleep(60)
-        i += 1
+        # Update last_index in settings
+        set_last_index(db, i + 1)
+
+        # Trim refresh_log table
+        trim_refresh_log(db)
+
+    except Exception as outer:
+        print(f"🚨 Unexpected error in main(): {outer}")
+
 
 if __name__ == "__main__":
     main()
