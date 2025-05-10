@@ -73,7 +73,7 @@ export default function StockCard({ stock, isTopGainer }: Props) {
       <div className="flex justify-between items-start mb-2">
         <div>
           <h2 className="font-semibold text-base text-gray-800 dark:text-white">
-            {stock.full_name ?? stock.symbol}
+            {stock.name ?? stock.symbol}
           </h2>
           <p className="text-sm text-gray-600 dark:text-gray-300">
             {stock.symbol} {stock.exchange ? `• ${stock.exchange}` : ""}
