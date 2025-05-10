@@ -134,4 +134,44 @@ The frontend is built with **Vite**, **React**, and **TailwindCSS**, and lives i
 ### 🧩 Contexts
 
 - `context/AuthContext.tsx`  
-  Tracks auth state using `onAuthStateChanged
+  Tracks auth state using `onAuthStateChanged()`  
+  Exposes user object and loading state
+
+- `context/WatchlistContext.tsx`  
+  Fetches and stores user’s watchlist  
+  Handles add/remove API calls and state updates
+
+---
+
+## 🔄 System Flow Overview
+
+### 🔐 Authentication Flow
+1. User logs in via Firebase (Google)
+2. Token is sent to `/users/me`
+3. User is created/fetched from DB
+4. Admins identified via `ADMIN_EMAILS` in `.env`
+
+---
+
+### 📊 Stock Fetching Flow
+1. `App.tsx` fetches `/stocks` after login
+2. Backend reads from `stock_cache` (auto-refreshed in background)
+3. Frontend renders data using Recharts
+
+---
+
+### ⭐ Watchlist Flow
+1. `+` button toggles watchlist status via backend
+2. `WatchlistContext` updates local state
+3. `WatchlistTab.tsx` filters stocks by current user’s watchlist
+
+---
+
+## 🧩 Technologies Used
+
+- **Backend:** FastAPI, SQLAlchemy, Alembic, PostgreSQL, Firebase Auth
+- **Frontend:** React, Vite, TailwindCSS, Firebase SDK, Recharts
+- **Deployment:** Render, GitHub Actions, Namecheap (DNS + SSL)
+- **APIs:** Finnhub
+
+---
