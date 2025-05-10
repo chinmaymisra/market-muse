@@ -22,6 +22,7 @@ def get_all_cached_stocks(db: Session = Depends(get_db)):
 
     # Parse CSV string in `history` into float list
     for stock in stocks:
-        stock.history = [float(x) for x in stock.history.split(",")] if stock.history else []
+       stock.history = [float(x) for x in str(stock.history).split(",")] if stock.history else []
+
 
     return stocks
