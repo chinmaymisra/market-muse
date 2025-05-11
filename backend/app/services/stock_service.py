@@ -3,6 +3,30 @@ from sqlalchemy.orm import Session
 from app.services.finnhub_service import get_stock_info
 from app.models.stock_cache import StockCache
 
+def sanitize_history_list(raw_history):
+    """
+    Ensures history is a clean list of floats.
+    Strips out any malformed braces or non-numeric entries.
+    """
+    clean = []
+
+    if isinstance(raw_history, str):
+        raw_history = raw_history.strip("{}").split(",")
+    elif isinstance(raw_history, list):
+        raw_history = [str(x) for x in raw_history]
+    else:
+        return clean
+
+    for point in raw_history:
+        try:
+            point = point.strip().replace("{", "").replace("}", "")
+            clean.append(float(point))
+        except (ValueError, TypeError):
+            continue
+
+    return clean
+
+
 def get_stock_data(symbols: List[str], db: Session) -> List[StockCache]:
     """
     Fetches live stock data for a list of symbols from Finnhub,
@@ -24,20 +48,13 @@ def get_stock_data(symbols: List[str], db: Session) -> List[StockCache]:
             info = get_stock_info(symbol)
 
             if info:
-                # Convert list of floats to CSV string for DB storage
-                # Validate and clean the incoming history list
+                # Sanitize and convert history to CSV string
                 raw_history = info.get("history", [])
-                clean_history = []
-
-                for point in raw_history:
-                    try:
-                        clean_history.append(float(point))
-                    except (ValueError, TypeError):
-                        continue  # Skip invalid entries
-
-                # Convert to CSV string for safe DB storage
+                clean_history = sanitize_history_list(raw_history)
                 history_str = ",".join(str(p) for p in clean_history)
 
+                # Final brace cleaner to guarantee safe storage
+                history_str = history_str.replace("{", "").replace("}", "")
 
                 # Check if symbol already exists in the cache
                 existing = db.query(StockCache).filter_by(symbol=symbol).first()
@@ -85,15 +102,6 @@ def get_stock_data(symbols: List[str], db: Session) -> List[StockCache]:
     # Fetch and format all entries with parsed history for return
     final = db.query(StockCache).all()
     for stock in final:
-        try:
-            stock.history = [
-                float(x.strip().replace("{", "").replace("}", ""))
-                for x in stock.history.split(",")
-                if x.strip()
-            ] if stock.history else []
-        except ValueError:
-            print(f"[ERROR] Failed to parse history for {stock.symbol}: {stock.history}")
-            stock.history = []
-
+        stock.history = sanitize_history_list(stock.history)
 
     return final
